@@ -1,0 +1,313 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600&family=Bebas+Neue&family=Cinzel:wght@400;600;700&display=swap');
+
+:root {
+  --dumb-bg: #000000;
+  --dumb-panel: #0d0d0d;
+  --dumb-border: #222222;
+  --dumb-text: #ffffff;
+  --dumb-muted: #888888;
+  --dumb-accent: #ffffff;
+  --dumb-accent-2: #ffffff;
+}
+
+* { box-sizing: border-box; }
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--dumb-bg);
+  color: var(--dumb-text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-weight: 300;
+}
+
+/* 标题使用衬线字体 */
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+}
+
+/* Logo使用特殊字体 */
+.logo, .app-header .logo {
+  font-family: 'Cinzel', 'Playfair Display', serif !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  color: #ffffff !important;
+  text-shadow: none !important;
+  font-style: normal !important;
+}
+
+/* 导航栏字体 */
+.nav a {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+/* 按钮字体 */
+.el-button {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* 卡片标题 */
+.el-card__header {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+}
+
+a {
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+a:hover {
+  opacity: 0.7;
+}
+
+/* 强制所有Element Plus组件使用黑白主题 */
+.el-card,
+.el-table,
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select,
+.el-select-dropdown,
+.el-popper,
+.el-picker-panel,
+.el-dialog,
+.el-drawer,
+.el-message-box,
+.el-popconfirm,
+.el-tooltip__popper {
+  --el-fill-color-blank: #0d0d0d !important;
+  --el-bg-color: #0d0d0d !important;
+  --el-bg-color-overlay: #0d0d0d !important;
+  --el-text-color-regular: #ffffff !important;
+  --el-text-color-primary: #ffffff !important;
+  --el-border-color: #222222 !important;
+  --el-border-color-light: #222222 !important;
+  --el-border-color-lighter: #222222 !important;
+  --el-color-primary: #ffffff !important;
+  --el-color-primary-light-3: #333333 !important;
+  --el-color-primary-light-5: #555555 !important;
+  --el-color-primary-light-7: #777777 !important;
+  --el-color-primary-light-8: #888888 !important;
+  --el-color-primary-light-9: #999999 !important;
+}
+
+/* 强制输入框背景色 */
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select .el-input__wrapper {
+  background-color: #0d0d0d !important;
+  box-shadow: 0 0 0 1px #222222 inset !important;
+}
+
+.el-input__wrapper:hover,
+.el-textarea__inner:hover {
+  box-shadow: 0 0 0 1px #444444 inset !important;
+}
+
+.el-input__wrapper.is-focus,
+.el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px #ffffff inset !important;
+}
+
+/* 强制输入框文本颜色 */
+.el-input__inner,
+.el-textarea__inner,
+.el-select__input {
+  color: #ffffff !important;
+}
+
+/* 下拉菜单 */
+.el-select-dropdown,
+.el-picker-panel {
+  background-color: #0d0d0d !important;
+  border-color: #222222 !important;
+}
+
+.el-select-dropdown__item {
+  color: #ffffff !important;
+}
+
+.el-select-dropdown__item:hover,
+.el-select-dropdown__item.is-selected {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+/* 对话框和弹出框 */
+.el-dialog,
+.el-drawer,
+.el-message-box {
+  background-color: #0d0d0d !important;
+  border-color: #222222 !important;
+}
+
+.el-dialog__header,
+.el-dialog__body,
+.el-drawer__header,
+.el-drawer__body {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+}
+
+.el-dialog__title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  color: #ffffff !important;
+}
+
+/* 按钮样式 */
+.el-button {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.el-button:hover {
+  background-color: #cccccc !important;
+  border-color: #cccccc !important;
+}
+
+.el-button--primary {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.el-button--primary:hover {
+  background-color: #cccccc !important;
+  border-color: #cccccc !important;
+}
+
+.el-button.is-plain,
+.el-button--danger.is-plain {
+  background-color: transparent !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.el-button.is-plain:hover,
+.el-button--danger.is-plain:hover {
+  background-color: #1a1a1a !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Popconfirm */
+.el-popconfirm__main {
+  color: #ffffff !important;
+}
+
+.el-popconfirm__action .el-button--small {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* 骨架屏 */
+.el-skeleton__item {
+  background: linear-gradient(90deg, #0a0a0a 25%, #1a1a1a 37%, #0a0a0a 63%) !important;
+}
+
+/* 空状态 */
+.el-empty {
+  --el-empty-fill-color-0: #0a0a0a !important;
+  --el-empty-fill-color-1: #1a1a1a !important;
+}
+
+.el-empty__description p {
+  color: #888888 !important;
+}
+
+/* 评分组件 */
+.el-rate__icon {
+  color: #ffffff !important;
+}
+
+.el-rate__icon.is-active {
+  color: #ffffff !important;
+}
+
+/* 分页 */
+.el-pagination {
+  --el-pagination-button-color: #ffffff !important;
+  --el-pagination-hover-color: #ffffff !important;
+}
+
+.el-pagination button:hover {
+  color: #ffffff !important;
+}
+
+.el-pager li {
+  background-color: transparent !important;
+  color: #888888 !important;
+}
+
+.el-pager li:hover,
+.el-pager li.is-active {
+  color: #ffffff !important;
+}
+
+/* 菜单 */
+.el-menu {
+  background-color: #0d0d0d !important;
+  border-right: 1px solid #222222 !important;
+}
+
+.el-menu-item {
+  color: #ffffff !important;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.el-menu-item:hover,
+.el-menu-item.is-active {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+/* 表单 */
+.el-form-item__label {
+  color: #ffffff !important;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+/* Alert */
+.el-alert {
+  background-color: #0d0d0d !important;
+  border-color: #222222 !important;
+}
+
+.el-alert__title,
+.el-alert__description {
+  color: #ffffff !important;
+}
+
+/* 消息提示 */
+.el-message {
+  background-color: #0d0d0d !important;
+  border-color: #222222 !important;
+}
+
+.el-message__content {
+  color: #ffffff !important;
+}
+
+/* router-link active 状态 - 只使用精确匹配 */
+.router-link-exact-active {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}

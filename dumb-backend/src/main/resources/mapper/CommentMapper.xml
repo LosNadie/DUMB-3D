@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dumb.mapper.CommentMapper">
+
+    <select id="selectAverageScoreByTarget" resultType="java.math.BigDecimal">
+        SELECT LEAST(10.0, AVG(score))
+        FROM comment
+        WHERE content_type = #{contentType}
+          AND content_id = #{contentId}
+          AND score IS NOT NULL
+    </select>
+
+    <select id="selectListByTargetWithUsername" resultType="com.dumb.entity.Comment">
+        SELECT c.id,
+               c.content_type,
+               c.content_id,
+               c.user_id,
+               c.content,
+               c.score,
+               c.parent_id,
+               c.create_time,
+               c.update_time,
+               u.username
+        FROM comment c
+                 LEFT JOIN user u ON u.id = c.user_id
+        WHERE c.content_type = #{contentType}
+          AND c.content_id = #{contentId}
+        ORDER BY c.create_time ASC
+    </select>
+
+</mapper>

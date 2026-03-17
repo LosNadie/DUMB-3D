@@ -1,0 +1,21 @@
+# System and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Frontend
+dumb-frontend/node_modules/
+dumb-frontend/dist/
+dumb-frontend/dist-ssr/
+dumb-frontend/.vite/
+*.log
+
+# Backend
+dumb-backend/target/
+dumb-backend/uploads/
+*.class
+
+# Environment files
+.env
+.env.*
