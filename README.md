@@ -114,6 +114,9 @@ npm run dev
 - 数据库是否可连接
 - 接口地址与跨域配置是否正确
 
+## 演示视频
+https://www.bilibili.com/video/BV1iUcfzmE5W/?share_source=copy_web&vd_source=f6a340ce315008577bb1ae8f966708e0
+
 ## GitHub
 
 仓库地址：<https://github.com/LosNadie/DUMB-3D>
