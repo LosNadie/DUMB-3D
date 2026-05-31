@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import BgmPlayer from './components/common/BgmPlayer.vue'
 
 onMounted(() => {
   // 确保暗色主题始终激活
@@ -9,6 +10,7 @@ onMounted(() => {
 
 <template>
   <router-view />
+  <BgmPlayer />
 </template>
 
 <style>

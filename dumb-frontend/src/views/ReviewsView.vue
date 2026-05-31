@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { reviewApi } from '../api'
 import type { ReviewItem } from '../types/models'
-import { ReviewCard } from '../components/cards'
-import FlowSceneBackdrop from '../components/common/FlowSceneBackdrop.vue'
 import { consumeCubeNavigation } from '../composables/useCubeTransition'
+import MusicVideoBackground from '../components/common/MusicVideoBackground.vue'
+
+const router = useRouter()
 
 const GENRE_OPTIONS = [
   { label: '流行', value: 'POP' },
@@ -17,24 +19,29 @@ const GENRE_OPTIONS = [
   { label: '古典', value: 'CLASSICAL' },
 ]
 
+const BACKEND_ORIGIN = 'http://localhost:8080'
+
 const reviews = ref<ReviewItem[]>([])
 const loading = ref(false)
 const introFromCube = ref(false)
 const cardsEntered = ref(false)
-
-const PAGE_SIZE = 6
-const savedPage = sessionStorage.getItem('music_page')
-const currentPage = ref(savedPage ? Number(savedPage) : 1)
 
 const filters = reactive({
   keyword: '',
   genre: '',
 })
 
-const pagedReviews = computed(() => {
-  const start = (currentPage.value - 1) * PAGE_SIZE
-  return reviews.value.slice(start, start + PAGE_SIZE)
-})
+function resolveCoverUrl(url?: string) {
+  if (!url) return 'https://dummyimage.com/400x400/111/eee&text=DUMB'
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/uploads/') || url.startsWith('/mock-covers/')) return url
+  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`
+  return url
+}
+
+function getRecordDelay(index: number) {
+  return { '--enter-delay': `${index * 0.08}s` } as Record<string, string>
+}
 
 async function loadReviews(isInitial = false) {
   loading.value = true
@@ -60,20 +67,18 @@ async function loadReviews(isInitial = false) {
 }
 
 function onSearch() {
-  currentPage.value = 1
   void loadReviews()
 }
 
 function onReset() {
   filters.keyword = ''
   filters.genre = ''
-  currentPage.value = 1
   void loadReviews()
 }
 
-watch(currentPage, (val) => {
-  sessionStorage.setItem('music_page', String(val))
-})
+function goToDetail(id: number) {
+  router.push(`/music/${id}`)
+}
 
 onMounted(() => {
   introFromCube.value = consumeCubeNavigation('/music')
@@ -82,169 +87,422 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="music-page" :class="{ 'cube-intro': introFromCube }">
-    <FlowSceneBackdrop :intro-from-cube="introFromCube" />
-    <div class="music-content">
-      <h2 class="page-title">MUSIC</h2>
-      <section class="filter-bar panel">
-        <div class="filter-left">
-          <el-input v-model="filters.keyword" placeholder="搜索专辑 / 艺人" clearable style="width: 220px" @keyup.enter="onSearch" />
-          <el-button type="primary" @click="onSearch">搜索</el-button>
-          <el-button @click="onReset">重置</el-button>
-        </div>
-        <el-select v-model="filters.genre" placeholder="风格" clearable style="width: 140px" @change="onSearch">
+  <MusicVideoBackground />
+  <section class="wax-store" :class="{ 'cube-intro': introFromCube }">
+    <!-- ═══════ HEADER ═══════ -->
+    <header class="wax-header">
+      <button class="back-home" @click="router.push('/')">←</button>
+      <h1 class="wax-title">Music</h1>
+      <span></span>
+    </header>
+
+    <!-- ═══════ FILTER ═══════ -->
+    <section class="wax-filter">
+      <div class="filter-group">
+        <span class="filter-label">SEARCH:</span>
+        <el-input
+          v-model="filters.keyword"
+          placeholder=""
+          clearable
+          @keyup.enter="onSearch"
+        />
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">GENRE:</span>
+        <el-select v-model="filters.genre" clearable placeholder="ALL" @change="onSearch">
           <el-option v-for="g in GENRE_OPTIONS" :key="g.value" :label="g.label" :value="g.value" />
         </el-select>
-      </section>
+      </div>
+      <div class="filter-actions">
+        <button class="wax-btn" @click="onSearch">EXECUTE</button>
+        <button class="wax-btn secondary" @click="onReset">RESET</button>
+      </div>
+    </section>
 
-      <div class="main-content">
-        <div class="grid" v-show="!loading">
-          <div
-            v-for="(item, index) in pagedReviews"
-            :key="item.id"
-            class="floating-card"
-            :class="{ entered: cardsEntered }"
-            :style="{ '--card-delay': `${index * 0.14}s`, '--enter-delay': `${index * 0.08}s` }"
-          >
-            <ReviewCard :item="item" />
-          </div>
+    <!-- ═══════ GRID ═══════ -->
+    <div class="wax-grid" v-show="!loading">
+      <div
+        v-for="(record, index) in reviews"
+        :key="record.id"
+        class="wax-card"
+        :class="{ entered: cardsEntered }"
+        :style="getRecordDelay(index)"
+        @click="goToDetail(record.id)"
+      >
+        <!-- 封面图 -->
+        <div
+          class="card-cover"
+          :style="{ backgroundImage: `url('${resolveCoverUrl(record.coverImage)}')` }"
+        >
+          <span class="cover-score">{{ record.score }}</span>
         </div>
-        <div class="pager" v-if="reviews.length > PAGE_SIZE">
-          <el-pagination
-            v-model:current-page="currentPage"
-            :page-size="PAGE_SIZE"
-            :total="reviews.length"
-            layout="prev, pager, next"
-            background
-          />
+
+        <!-- 信息区 -->
+        <div class="card-info">
+          <div class="info-meta">
+            {{ record.releaseDate?.split('-')[0] || 'N/A' }}
+          </div>
+          <h3 class="info-title">{{ record.albumTitle }}</h3>
+          <p class="info-desc">{{ record.artist }}</p>
         </div>
       </div>
     </div>
+
+    <el-empty v-if="!loading && reviews.length === 0" description="暂无专辑" />
   </section>
 </template>
 
 <style scoped>
-.music-page {
-  position: relative;
-  min-height: calc(100vh - 30px);
-}
+/* ═══════════════════════════════════════════════
+   WAX CARD STYLE — Large cards with spacing
+   ═══════════════════════════════════════════════ */
 
-.music-content {
+.wax-store {
   position: relative;
   z-index: 1;
+  min-height: 100vh;
+  background: transparent;
+  color: #ffffff;
+  font-family: 'Inter', -apple-system, sans-serif;
+  padding: 48px 40px 80px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.panel {
-  background: rgba(8, 10, 22, 0.54);
-  border: 1px solid rgba(120, 136, 255, 0.2);
-  backdrop-filter: blur(7px);
-}
-
-.page-title {
-  margin: 0;
-  text-align: center;
-  font-family: 'Playfair Display', serif;
-  font-size: 1.8rem;
-  letter-spacing: 4px;
-}
-
-.filter-bar {
+/* ── HEADER ── */
+.wax-header {
+  margin-bottom: 40px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  width: min(100%, 980px);
-  margin: 10px auto 36px;
-  padding: 14px;
-  border-radius: 12px;
-  box-sizing: border-box;
 }
 
-.filter-left {
+.back-home {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+  line-height: 1;
+}
+
+.back-home:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.wax-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+  letter-spacing: -0.5px;
+  text-align: center;
+  flex: 1;
+}
+
+/* ── FILTER ── */
+.wax-filter {
   display: flex;
-  gap: 16px;
   align-items: center;
-}
-
-
-.main-content {
-  min-width: 0;
-}
-
-.grid {
-  display: grid;
   gap: 20px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1a1a1a;
 }
 
-.floating-card {
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 0.7rem;
+  color: #fff;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+.wax-filter :deep(.el-input__wrapper) {
+  background: transparent;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0;
+  padding: 0 0 4px 0;
+}
+
+.wax-filter :deep(.el-input__wrapper:hover) {
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.wax-filter :deep(.el-input__wrapper.is-focus) {
+  border-bottom-color: #fff;
+}
+
+.wax-filter :deep(.el-input__inner) {
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+}
+
+.wax-filter :deep(.el-input__inner::placeholder) {
+  color: #444;
+}
+
+.wax-filter :deep(.el-select .el-input__wrapper) {
+  background: transparent;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0;
+  padding: 0 0 4px 0;
+}
+
+.wax-filter :deep(.el-select .el-input__wrapper.is-focus) {
+  border-bottom-color: #fff;
+}
+
+.wax-filter :deep(.el-select .el-input__inner) {
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.wax-btn {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 7px 18px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.wax-btn:hover {
+  background: #ccc;
+}
+
+.wax-btn.secondary {
+  background: transparent;
+  color: #666;
+  border: 1px solid #333;
+}
+
+.wax-btn.secondary:hover {
+  border-color: #555;
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════
+   GRID — 3-column large cards
+   ═══════════════════════════════════════════════ */
+.wax-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+/* ── Card ── */
+.wax-card {
+  background: #0a0a0a;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
   opacity: 0;
-  transform: translateY(60px);
-  transition: none;
+  transform: translateY(24px);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+  border: 1px solid #151515;
 }
 
-.floating-card.entered {
-  animation:
-    cardRiseUp 0.62s cubic-bezier(0.22, 1, 0.36, 1) both,
-    musicFloat 6.8s ease-in-out infinite;
-  animation-delay: var(--enter-delay, 0s), calc(var(--card-delay, 0s) + 0.62s);
-  opacity: 1;
-  transform: none;
+.wax-card.entered {
+  animation: cardAppear 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--enter-delay, 0s);
 }
 
-@keyframes cardRiseUp {
-  from {
-    opacity: 0;
-    transform: translateY(72px);
-  }
+@keyframes cardAppear {
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.pager {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
+.wax-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-@media (max-width: 1200px) {
-  .main-content {
-    width: 100%;
+/* 封面图 */
+.card-cover {
+  position: relative;
+  aspect-ratio: 1;
+  background-size: cover;
+  background-position: center;
+  background-color: #111;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s ease;
+}
+
+.wax-card:hover .card-cover {
+  transform: scale(1.08);
+  filter: brightness(1.08) contrast(1.05);
+}
+
+.cover-tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.cover-score {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: #fff;
+  color: #000;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+
+.wax-card:hover .cover-score {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 信息区 */
+.card-info {
+  padding: 18px 20px 22px;
+  transition: background 0.3s ease;
+}
+
+.wax-card:hover .card-info {
+  background: #101010;
+}
+
+.info-meta {
+  font-size: 0.65rem;
+  color: #555;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 10px;
+  transition: color 0.3s ease;
+}
+
+.wax-card:hover .info-meta {
+  color: #777;
+}
+
+.info-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 8px;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  transition: color 0.3s ease;
+}
+
+.wax-card:hover .info-title {
+  color: #fff;
+}
+
+.info-desc {
+  font-size: 0.82rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  transition: color 0.3s ease;
+}
+
+.wax-card:hover .info-desc {
+  color: #888;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .wax-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
   }
-}
 
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .wax-store {
+    padding: 32px 24px 60px;
   }
 }
 
 @media (max-width: 640px) {
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
+  .wax-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .wax-title {
+    font-size: 1.8rem;
+  }
+
+  .wax-filter {
+    gap: 14px;
+  }
+
+  .filter-actions {
+    width: 100%;
+    margin-left: 0;
   }
 }
 
-.cube-intro .music-content {
+/* ── cube transition ── */
+.cube-intro .wax-store {
   animation: cubePageReveal 0.9s ease-out both;
 }
 
 @keyframes cubePageReveal {
   0% {
-    transform: scale(1.03);
-    opacity: 0.2;
-    filter: saturate(1.5) blur(2px);
+    transform: scale(1.02);
+    opacity: 0.3;
+    filter: blur(2px);
   }
   100% {
     transform: scale(1);
     opacity: 1;
-    filter: saturate(1) blur(0);
+    filter: blur(0);
   }
-}
-
-@keyframes musicFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-9px); }
 }
 </style>

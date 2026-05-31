@@ -2,8 +2,10 @@ package com.dumb.controller.admin;
 
 import com.dumb.common.result.ApiResult;
 import com.dumb.controller.BaseController;
+import com.dumb.dto.request.ReviewAiGenerateRequest;
 import com.dumb.dto.request.ReviewCreateRequest;
 import com.dumb.dto.request.ReviewSearchRequest;
+import com.dumb.dto.response.ReviewAiGenerateResponse;
 import com.dumb.dto.response.ReviewListItemVO;
 import com.dumb.entity.Review;
 import com.dumb.service.ReviewService;
@@ -33,22 +35,27 @@ public class AdminReviewController extends BaseController {
         return ApiResult.success(reviewService.create(request, currentUsername()));
     }
 
+    @PostMapping("/ai-generate")
+    public ApiResult<ReviewAiGenerateResponse> aiGenerate(@Valid @RequestBody ReviewAiGenerateRequest request) {
+        return ApiResult.success(reviewService.generateAiAssist(request));
+    }
+
     @GetMapping
     public ApiResult<List<ReviewListItemVO>> list(ReviewSearchRequest request) {
         return ApiResult.success(reviewService.adminSearch(request));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ApiResult<Review> detail(@PathVariable Long id) {
         return ApiResult.success(reviewService.adminGetById(id));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public ApiResult<Review> update(@PathVariable Long id, @Valid @RequestBody ReviewCreateRequest request) {
         return ApiResult.success(reviewService.update(id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ApiResult<Void> delete(@PathVariable Long id) {
         reviewService.deleteById(id);
         return ApiResult.success();

@@ -18,7 +18,7 @@ async function doSearch() {
     <FlowSceneBackdrop />
     <div class="search-content">
       <h2 class="page-title">搜索</h2>
-      <div class="search-wrap panel">
+      <div class="search-wrap">
         <el-input v-model="keyword" placeholder="输入艺人、专辑或关键词" />
         <el-button type="primary" @click="doSearch">搜索</el-button>
       </div>
@@ -49,17 +49,24 @@ async function doSearch() {
   letter-spacing: 4px;
 }
 
-.panel {
-  background: rgba(8, 10, 22, 0.54);
-  border: 1px solid rgba(120, 136, 255, 0.2);
-  backdrop-filter: blur(7px);
-}
-
 .search-wrap {
   display: flex;
   gap: 10px;
   margin-bottom: 14px;
-  padding: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #222222;
+}
+
+/* 搜索按钮：透明边框风格 */
+.search-wrap .el-button--primary {
+  background: transparent;
+  border: 1px solid #ffffff;
+  color: #ffffff;
+}
+
+.search-wrap .el-button--primary:hover {
+  background: #ffffff;
+  color: #000000;
 }
 
 .table-panel {

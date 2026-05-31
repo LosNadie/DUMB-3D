@@ -40,8 +40,8 @@ h1 {
 }
 
 .about-content {
-  background: rgba(8, 10, 22, 0.54);
-  border: 1px solid rgba(120, 136, 255, 0.2);
+  background: #0d0d0d;
+  border: 1px solid #222222;
   backdrop-filter: blur(7px);
   padding: 40px;
   border-radius: 0;

@@ -66,9 +66,9 @@ async function submit() {
 .login-card {
   width: 420px;
   max-width: 90vw;
-  background: rgba(8, 10, 22, 0.62);
+  background: #0d0d0d;
   color: var(--dumb-text);
-  border-color: rgba(120, 136, 255, 0.2);
+  border-color: #222222;
   backdrop-filter: blur(8px);
 }
 </style>

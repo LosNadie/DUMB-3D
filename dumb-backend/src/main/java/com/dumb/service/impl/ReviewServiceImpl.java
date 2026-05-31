@@ -5,14 +5,17 @@ import com.dumb.common.enums.ContentStatusEnum;
 import com.dumb.common.enums.ContentTypeEnum;
 import com.dumb.common.enums.ResultCodeEnum;
 import com.dumb.common.exception.BizException;
+import com.dumb.dto.request.ReviewAiGenerateRequest;
 import com.dumb.dto.request.ReviewCreateRequest;
 import com.dumb.dto.request.ReviewSearchRequest;
+import com.dumb.dto.response.ReviewAiGenerateResponse;
 import com.dumb.dto.response.ReviewListItemVO;
 import com.dumb.entity.Review;
 import com.dumb.entity.User;
 import com.dumb.mapper.CommentMapper;
 import com.dumb.mapper.ReviewMapper;
 import com.dumb.mapper.UserMapper;
+import com.dumb.service.ReviewAiGenerationService;
 import com.dumb.service.ReviewService;
 import org.springframework.stereotype.Service;
 
@@ -27,12 +30,14 @@ public class ReviewServiceImpl implements ReviewService {
     private final CommentMapper commentMapper;
     private final UserMapper userMapper;
     private final com.dumb.mapper.AlbumMapper albumMapper;
+    private final ReviewAiGenerationService reviewAiGenerationService;
 
-    public ReviewServiceImpl(ReviewMapper reviewMapper, CommentMapper commentMapper, UserMapper userMapper, com.dumb.mapper.AlbumMapper albumMapper) {
+    public ReviewServiceImpl(ReviewMapper reviewMapper, CommentMapper commentMapper, UserMapper userMapper, com.dumb.mapper.AlbumMapper albumMapper, ReviewAiGenerationService reviewAiGenerationService) {
         this.reviewMapper = reviewMapper;
         this.commentMapper = commentMapper;
         this.userMapper = userMapper;
         this.albumMapper = albumMapper;
+        this.reviewAiGenerationService = reviewAiGenerationService;
     }
 
     @Override
@@ -83,6 +88,15 @@ public class ReviewServiceImpl implements ReviewService {
             review.setScore(avgScore);
         }
         return review;
+    }
+
+    @Override
+    public ReviewListItemVO getDetail(Long id) {
+        ReviewListItemVO vo = reviewMapper.getPublishedDetail(id);
+        if (vo == null) {
+            throw new BizException(ResultCodeEnum.NOT_FOUND, "乐评不存在");
+        }
+        return vo;
     }
 
     @Override
@@ -181,5 +195,10 @@ public class ReviewServiceImpl implements ReviewService {
             throw new BizException(ResultCodeEnum.NOT_FOUND, "乐评不存在");
         }
         reviewMapper.deleteById(id);
+    }
+
+    @Override
+    public ReviewAiGenerateResponse generateAiAssist(ReviewAiGenerateRequest request) {
+        return reviewAiGenerationService.generate(request);
     }
 }

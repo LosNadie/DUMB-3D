@@ -11,7 +11,11 @@ const isHomePage = computed(() => route.name === 'home')
 <template>
   <div class="layout">
     <main class="content" :class="{ 'admin-content': isAdminPage, 'home-content': isHomePage }">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive :include="['HomeView']">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </main>
     <AppFooter v-if="!isAdminPage && !isHomePage" />
   </div>

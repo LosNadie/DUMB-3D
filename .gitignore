@@ -9,13 +9,17 @@ dumb-frontend/node_modules/
 dumb-frontend/dist/
 dumb-frontend/dist-ssr/
 dumb-frontend/.vite/
+dumb-frontend/public/videos/
+dumb-frontend/public/audio/
 *.log
 
 # Backend
 dumb-backend/target/
 dumb-backend/uploads/
+dumb-backend/src/main/resources/static/
 *.class
 
 # Environment files
 .env
 .env.*
+dumb-backend/.env.local

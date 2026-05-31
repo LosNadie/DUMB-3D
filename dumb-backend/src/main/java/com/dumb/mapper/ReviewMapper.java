@@ -19,4 +19,6 @@ public interface ReviewMapper extends BaseMapper<Review> {
                                               @Param("genre") String genre,
                                               @Param("minScore") Double minScore,
                                               @Param("maxScore") Double maxScore);
+
+    ReviewListItemVO getPublishedDetail(@Param("id") Long id);
 }

@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { animeApi } from '../api'
 import type { AnimeItem } from '../types/models'
 import { AnimeCard } from '../components/cards'
 import FlowSceneBackdrop from '../components/common/FlowSceneBackdrop.vue'
 import { consumeCubeNavigation } from '../composables/useCubeTransition'
-
-const PAGE_SIZE = 10
-const savedPage = sessionStorage.getItem('anime_page')
-const currentPage = ref(savedPage ? Number(savedPage) : 1)
-
-watch(currentPage, (val) => {
-  sessionStorage.setItem('anime_page', String(val))
-})
+import { useDragScroll } from '../composables/useDragScroll'
 
 const list = ref<AnimeItem[]>([])
 const filters = reactive({
@@ -21,6 +14,7 @@ const filters = reactive({
   season: '',
   genre: '',
 })
+const carouselRef = ref<HTMLElement>()
 
 const SEASON_OPTIONS = [
   { label: '春', value: 'SPRING' },
@@ -82,37 +76,24 @@ const filteredList = computed(() => {
   })
 })
 
-const pagedList = computed(() => {
-  const start = (currentPage.value - 1) * PAGE_SIZE
-  return filteredList.value.slice(start, start + PAGE_SIZE)
-})
-
-const initialized = ref(false)
 const introFromCube = ref(false)
 const cardsEntered = ref(false)
-watch(filteredList, () => {
-  if (initialized.value) {
-    currentPage.value = 1
-  }
-})
 
 function resetFilters() {
   filters.keyword = ''
   filters.year = ''
   filters.season = ''
   filters.genre = ''
-  currentPage.value = 1
 }
 
 onMounted(async () => {
   introFromCube.value = consumeCubeNavigation('/anime')
   const res = await animeApi.list()
   list.value = res.data
-  await nextTick()
-  initialized.value = true
   requestAnimationFrame(() => {
     cardsEntered.value = true
   })
+  useDragScroll(carouselRef.value)
 })
 </script>
 
@@ -121,7 +102,7 @@ onMounted(async () => {
     <FlowSceneBackdrop :intro-from-cube="introFromCube" />
     <div class="anime-content">
       <h2 class="page-title">ANIME</h2>
-      <div class="filter-bar panel">
+      <div class="filter-bar">
         <el-input v-model="filters.keyword" placeholder="搜索动漫名称/制片商" clearable class="filter-keyword" />
         <el-select v-model="filters.year" placeholder="年份" clearable class="filter-select">
           <el-option v-for="year in yearOptions" :key="year" :label="year" :value="year" />
@@ -134,25 +115,18 @@ onMounted(async () => {
         </el-select>
         <el-button @click="resetFilters">重置</el-button>
       </div>
-      <div class="grid">
-        <div
-          v-for="(item, index) in pagedList"
-          :key="item.id"
-          class="floating-card"
-          :class="{ entered: cardsEntered }"
-          :style="{ '--card-delay': `${index * 0.1}s`, '--enter-delay': `${index * 0.07}s` }"
-        >
-          <AnimeCard :item="item" />
+      <div ref="carouselRef" class="carousel-wrapper">
+        <div class="carousel-track">
+          <div
+            v-for="(item, index) in filteredList"
+            :key="item.id"
+            class="carousel-card floating-card"
+            :class="{ entered: cardsEntered }"
+            :style="{ '--card-delay': `${index * 0.1}s`, '--enter-delay': `${index * 0.07}s` }"
+          >
+            <AnimeCard :item="item" />
+          </div>
         </div>
-      </div>
-      <div class="pager" v-if="filteredList.length > PAGE_SIZE">
-        <el-pagination
-          v-model:current-page="currentPage"
-          :page-size="PAGE_SIZE"
-          :total="filteredList.length"
-          layout="prev, pager, next"
-          background
-        />
       </div>
     </div>
   </section>
@@ -171,14 +145,6 @@ onMounted(async () => {
   gap: 20px;
 }
 
-.panel {
-  background: rgba(8, 10, 22, 0.54);
-  border: 1px solid rgba(120, 136, 255, 0.2);
-  backdrop-filter: blur(7px);
-  border-radius: 12px;
-  padding: 14px;
-}
-
 .page-title {
   margin: 0;
   text-align: center;
@@ -192,6 +158,8 @@ onMounted(async () => {
   grid-template-columns: 1.2fr repeat(3, 160px) auto;
   gap: 10px;
   align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #222222;
 }
 
 .filter-keyword,
@@ -199,10 +167,45 @@ onMounted(async () => {
   width: 100%;
 }
 
-.grid {
-  display: grid;
+/* 重置按钮：纯文字风格 */
+.filter-bar .el-button {
+  background: transparent;
+  border: none;
+  color: #555555;
+  padding: 5px 12px;
+  font-size: 13px;
+}
+
+.filter-bar .el-button:hover {
+  color: #ffffff;
+  background: transparent;
+}
+
+.carousel-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+}
+.carousel-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.carousel-wrapper:active {
+  cursor: grabbing;
+}
+
+.carousel-track {
+  display: flex;
   gap: 20px;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  scroll-snap-type: x mandatory;
+  padding: 8px 4px 24px;
+}
+
+.carousel-card {
+  flex-shrink: 0;
+  width: 240px;
+  scroll-snap-align: start;
 }
 
 .floating-card {
@@ -228,12 +231,6 @@ onMounted(async () => {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.pager {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
 }
 
 @media (max-width: 960px) {

@@ -10,6 +10,14 @@ export interface AuthResponse {
   role: string
 }
 
+export interface ReviewAiGenerateResponse {
+  year?: string
+  tracks?: string
+  description?: string
+  coverImage?: string
+  rawAlbumMeta?: Record<string, unknown>
+}
+
 export interface ReviewItem {
   id: number
   albumId: number

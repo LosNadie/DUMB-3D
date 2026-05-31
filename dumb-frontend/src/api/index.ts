@@ -1,5 +1,5 @@
 import http from './http'
-import type { ApiResult, AnimeItem, AuthResponse, CommentItem, MovieItem, ReviewItem } from '../types/models'
+import type { ApiResult, AnimeItem, AuthResponse, CommentItem, MovieItem, ReviewAiGenerateResponse, ReviewItem } from '../types/models'
 
 export const authApi = {
   login(payload: { username: string; password: string }) {
@@ -31,6 +31,11 @@ export const reviewApi = {
   },
   remove(id: number) {
     return http.delete<any, ApiResult<any>>(`/admin/reviews/${id}`)
+  },
+  aiGenerate(payload: { artist: string; albumTitle: string; year: string }) {
+    return http.post<any, ApiResult<ReviewAiGenerateResponse>>('/admin/reviews/ai-generate', payload, {
+      timeout: 120000,
+    })
   },
 }
 

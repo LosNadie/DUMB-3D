@@ -5,7 +5,7 @@ import type { ApiResult } from '../types/models'
 const API_SUCCESS_CODE = 0
 
 const http = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: '/api',
   timeout: 10000,
 })
 

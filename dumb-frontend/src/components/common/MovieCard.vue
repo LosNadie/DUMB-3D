@@ -8,6 +8,7 @@ const BACKEND_ORIGIN = 'http://localhost:8080'
 function resolveCoverUrl(url?: string) {
   if (!url) return 'https://dummyimage.com/500x750/111/eee&text=MOVIE'
   if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/uploads/') || url.startsWith('/mock-covers/')) return url
   if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`
   return url
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 import type { UploadProps } from 'element-plus'
 import { animeApi, movieApi, reviewApi } from '../../api'
 import { useAuthStore } from '../../stores/auth'
@@ -9,7 +10,6 @@ import type { AnimeItem, ApiResult, MovieItem, ReviewItem } from '../../types/mo
 import RichEditor from '../../components/common/RichEditor.vue'
 
 const REVIEW_DEFAULT_SCORE = 8.5
-const PAGE_SIZE = 6
 type AdminMenu = 'review' | 'news' | 'interview'
 
 const REVIEW_GENRE_OPTIONS = [
@@ -95,6 +95,7 @@ interface InterviewFormState {
 }
 
 const authStore = useAuthStore()
+const router = useRouter()
 const activeMenu = ref<AdminMenu>('review')
 const publishDialogVisible = ref(false)
 const editingReviewId = ref<number | null>(null)
@@ -110,9 +111,7 @@ const reviewSubmitting = ref(false)
 const newsSubmitting = ref(false)
 const interviewSubmitting = ref(false)
 const coverUploading = ref(false)
-const currentPage = ref(1)
-const newsCurrentPage = ref(1)
-const interviewCurrentPage = ref(1)
+const aiGenerating = ref(false)
 const BACKEND_ORIGIN = 'http://localhost:8080'
 
 const reviewQuery = reactive({
@@ -162,24 +161,10 @@ const interviewForm = reactive<InterviewFormState>({
   releaseDate: '',
 })
 
-const pagedReviewRows = computed(() => {
-  const start = (currentPage.value - 1) * PAGE_SIZE
-  return reviewRows.value.slice(start, start + PAGE_SIZE)
-})
-
-const pagedNewsRows = computed(() => {
-  const start = (newsCurrentPage.value - 1) * PAGE_SIZE
-  return newsRows.value.slice(start, start + PAGE_SIZE)
-})
-
-const pagedInterviewRows = computed(() => {
-  const start = (interviewCurrentPage.value - 1) * PAGE_SIZE
-  return interviewRows.value.slice(start, start + PAGE_SIZE)
-})
-
 function resolveCoverUrl(url?: string) {
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/uploads/') || url.startsWith('/mock-covers/')) return url
   if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`
   return url
 }
@@ -343,6 +328,61 @@ function stripHtmlText(value: string) {
     .trim()
 }
 
+function hasReviewAiTargetFieldsFilled() {
+  return Boolean(reviewForm.artist.trim() && reviewForm.albumTitle.trim() && reviewForm.year.trim())
+}
+
+function isValidYear(value: string) {
+  return /^(19|20)\d{2}$/.test(value.trim())
+}
+
+function hasExistingAiDraftContent() {
+  return (
+    reviewForm.tracks.trim().length > 0
+    || stripHtmlText(reviewForm.description).length > 0
+    || reviewForm.coverImage.trim().length > 0
+  )
+}
+
+async function onAiGenerateReview() {
+  if (!hasReviewAiTargetFieldsFilled()) {
+    ElMessage.warning('请先填写专辑名称、艺人、年份')
+    return
+  }
+  if (!isValidYear(reviewForm.year)) {
+    ElMessage.warning('年份格式不正确，请填写 4 位数字（如 2025）')
+    return
+  }
+  if (hasExistingAiDraftContent()) {
+    try {
+      await ElMessageBox.confirm('将覆盖当前已填写的曲目、封面或描述，是否继续？', '确认覆盖', {
+        type: 'warning',
+        confirmButtonText: '覆盖',
+        cancelButtonText: '取消',
+      })
+    } catch {
+      return
+    }
+  }
+  aiGenerating.value = true
+  try {
+    const res = await reviewApi.aiGenerate({
+      artist: reviewForm.artist.trim(),
+      albumTitle: reviewForm.albumTitle.trim(),
+      year: reviewForm.year.trim(),
+    })
+    const data = res.data
+    if (data.tracks) reviewForm.tracks = data.tracks
+    if (data.description) reviewForm.description = data.description
+    if (data.coverImage) reviewForm.coverImage = data.coverImage
+    ElMessage.success('AI 生成完成，请核对后再发布')
+  } catch (e: any) {
+    ElMessage.error(e?.message || 'AI 生成失败')
+  } finally {
+    aiGenerating.value = false
+  }
+}
+
 async function loadAdminReviews() {
   reviewListLoading.value = true
   try {
@@ -351,9 +391,6 @@ async function loadAdminReviews() {
     if (reviewQuery.genre) params.genre = reviewQuery.genre
     const res = await reviewApi.adminList(params)
     reviewRows.value = res.data
-    if (currentPage.value > Math.ceil((res.data.length || 1) / PAGE_SIZE)) {
-      currentPage.value = 1
-    }
   } catch (e: any) {
     ElMessage.error(e?.message || '加载乐评列表失败')
   } finally {
@@ -368,9 +405,6 @@ async function loadAdminNews() {
     if (newsQuery.keyword.trim()) params.keyword = newsQuery.keyword.trim()
     const res = await animeApi.adminList(params)
     newsRows.value = res.data
-    if (newsCurrentPage.value > Math.ceil((res.data.length || 1) / PAGE_SIZE)) {
-      newsCurrentPage.value = 1
-    }
   } catch (e: any) {
     ElMessage.error(e?.message || '加载动漫列表失败')
   } finally {
@@ -385,9 +419,6 @@ async function loadAdminInterviews() {
     if (interviewQuery.keyword.trim()) params.keyword = interviewQuery.keyword.trim()
     const res = await movieApi.adminList(params)
     interviewRows.value = res.data
-    if (interviewCurrentPage.value > Math.ceil((res.data.length || 1) / PAGE_SIZE)) {
-      interviewCurrentPage.value = 1
-    }
   } catch (e: any) {
     ElMessage.error(e?.message || '加载电影列表失败')
   } finally {
@@ -396,36 +427,30 @@ async function loadAdminInterviews() {
 }
 
 function onReviewSearch() {
-  currentPage.value = 1
   void loadAdminReviews()
 }
 
 function resetReviewSearch() {
   reviewQuery.keyword = ''
   reviewQuery.genre = ''
-  currentPage.value = 1
   void loadAdminReviews()
 }
 
 function onNewsSearch() {
-  newsCurrentPage.value = 1
   void loadAdminNews()
 }
 
 function resetNewsSearch() {
   newsQuery.keyword = ''
-  newsCurrentPage.value = 1
   void loadAdminNews()
 }
 
 function onInterviewSearch() {
-  interviewCurrentPage.value = 1
   void loadAdminInterviews()
 }
 
 function resetInterviewSearch() {
   interviewQuery.keyword = ''
-  interviewCurrentPage.value = 1
   void loadAdminInterviews()
 }
 
@@ -796,6 +821,7 @@ onMounted(() => {
 <template>
   <section class="admin-page">
     <header class="admin-header">
+      <button class="back-home" @click="router.push('/')">←</button>
       <h1>后台管理</h1>
       <el-button type="primary" @click="openPublishDialog">发布</el-button>
     </header>
@@ -823,34 +849,30 @@ onMounted(() => {
           </el-card>
 
           <el-card class="admin-card" v-loading="reviewListLoading">
-            <div v-for="row in pagedReviewRows" :key="row.id" class="review-row">
-              <div class="row-cover-wrap">
-                <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
-              </div>
-              <div class="row-info">
-                <p><span class="label">专辑标题：</span>{{ row.albumTitle || '-' }}</p>
-                <p><span class="label">艺人：</span>{{ row.artist || '-' }}</p>
-                <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
-                <p><span class="label">评分：</span>{{ row.score }}</p>
-              </div>
-              <div class="row-actions">
-                <el-button type="primary" plain @click="editReview(row.id)">修改</el-button>
-                <el-popconfirm title="确认删除该乐评吗？" @confirm="deleteReview(row.id)">
-                  <template #reference>
-                    <el-button type="danger" plain>删除</el-button>
-                  </template>
-                </el-popconfirm>
+            <div class="list-rows" v-if="reviewRows.length > 0">
+              <div>
+                <div v-for="row in reviewRows" :key="row.id" class="review-row">
+                  <div class="row-cover-wrap">
+                    <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
+                  </div>
+                  <div class="row-info">
+                    <p><span class="label">专辑标题：</span>{{ row.albumTitle || '-' }}</p>
+                    <p><span class="label">艺人：</span>{{ row.artist || '-' }}</p>
+                    <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
+                    <p><span class="label">评分：</span>{{ row.score }}</p>
+                  </div>
+                  <div class="row-actions">
+                    <el-button type="primary" plain @click="editReview(row.id)">修改</el-button>
+                    <el-popconfirm title="确认删除该乐评吗？" @confirm="deleteReview(row.id)">
+                      <template #reference>
+                        <el-button type="danger" plain>删除</el-button>
+                      </template>
+                    </el-popconfirm>
+                  </div>
+                </div>
               </div>
             </div>
             <el-empty v-if="!reviewListLoading && reviewRows.length === 0" description="暂无乐评数据" />
-            <div class="pager" v-if="reviewRows.length > 0">
-              <el-pagination
-                v-model:current-page="currentPage"
-                layout="prev, pager, next, total"
-                :page-size="PAGE_SIZE"
-                :total="reviewRows.length"
-              />
-            </div>
           </el-card>
         </template>
 
@@ -864,35 +886,31 @@ onMounted(() => {
           </el-card>
 
           <el-card class="admin-card" v-loading="newsListLoading">
-            <div v-for="row in pagedNewsRows" :key="row.id" class="review-row">
-              <div class="row-cover-wrap" v-if="row.coverImage">
-                <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
-              </div>
-              <div class="row-info" :style="row.coverImage ? {} : { gridColumn: '1 / span 2' }">
-                <p><span class="label">动漫名称：</span>{{ row.title }}</p>
-                <p><span class="label">制片商：</span>{{ row.studio || '-' }}</p>
-                <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
-                <p><span class="label">评分：</span>{{ Number(row.score || 0).toFixed(1) }}</p>
-                <p><span class="label">发行年月：</span>{{ row.releaseDate || '-' }}</p>
-              </div>
-              <div class="row-actions">
-                <el-button type="primary" plain @click="editNews(row.id)">修改</el-button>
-                <el-popconfirm title="确认删除该动漫吗？" @confirm="deleteNews(row.id)">
-                  <template #reference>
-                    <el-button type="danger" plain>删除</el-button>
-                  </template>
-                </el-popconfirm>
+            <div class="list-rows" v-if="newsRows.length > 0">
+              <div>
+                <div v-for="row in newsRows" :key="row.id" class="review-row">
+                  <div class="row-cover-wrap" v-if="row.coverImage">
+                    <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
+                  </div>
+                  <div class="row-info" :style="row.coverImage ? {} : { gridColumn: '1 / span 2' }">
+                    <p><span class="label">动漫名称：</span>{{ row.title }}</p>
+                    <p><span class="label">制片商：</span>{{ row.studio || '-' }}</p>
+                    <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
+                    <p><span class="label">评分：</span>{{ Number(row.score || 0).toFixed(1) }}</p>
+                    <p><span class="label">发行年月：</span>{{ row.releaseDate || '-' }}</p>
+                  </div>
+                  <div class="row-actions">
+                    <el-button type="primary" plain @click="editNews(row.id)">修改</el-button>
+                    <el-popconfirm title="确认删除该动漫吗？" @confirm="deleteNews(row.id)">
+                      <template #reference>
+                        <el-button type="danger" plain>删除</el-button>
+                      </template>
+                    </el-popconfirm>
+                  </div>
+                </div>
               </div>
             </div>
             <el-empty v-if="!newsListLoading && newsRows.length === 0" description="暂无动漫数据" />
-            <div class="pager" v-if="newsRows.length > 0">
-              <el-pagination
-                v-model:current-page="newsCurrentPage"
-                layout="prev, pager, next, total"
-                :page-size="PAGE_SIZE"
-                :total="newsRows.length"
-              />
-            </div>
           </el-card>
         </template>
 
@@ -906,37 +924,33 @@ onMounted(() => {
           </el-card>
 
           <el-card class="admin-card" v-loading="interviewListLoading">
-            <div v-for="row in pagedInterviewRows" :key="row.id" class="review-row">
-              <div class="row-cover-wrap" v-if="row.coverImage">
-                <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
-              </div>
-              <div class="row-info" :style="row.coverImage ? {} : { gridColumn: '1 / span 2' }">
-                <p><span class="label">电影名称：</span>{{ row.title || '-' }}</p>
-                <p><span class="label">导演：</span>{{ row.director || '-' }}</p>
-                <p><span class="label">主演：</span>{{ row.actors || '-' }}</p>
-                <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
-                <p><span class="label">地区：</span>{{ row.region || '-' }}</p>
-                <p><span class="label">评分：</span>{{ Number(row.score || 0).toFixed(1) }}</p>
-                <p><span class="label">上映：</span>{{ row.releaseDate || '-' }}</p>
-              </div>
-              <div class="row-actions">
-                <el-button type="primary" plain @click="editInterview(row.id)">修改</el-button>
-                <el-popconfirm title="确认删除该电影吗？" @confirm="deleteInterview(row.id)">
-                  <template #reference>
-                    <el-button type="danger" plain>删除</el-button>
-                  </template>
-                </el-popconfirm>
+            <div class="list-rows" v-if="interviewRows.length > 0">
+              <div>
+                <div v-for="row in interviewRows" :key="row.id" class="review-row">
+                  <div class="row-cover-wrap" v-if="row.coverImage">
+                    <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
+                  </div>
+                  <div class="row-info" :style="row.coverImage ? {} : { gridColumn: '1 / span 2' }">
+                    <p><span class="label">电影名称：</span>{{ row.title || '-' }}</p>
+                    <p><span class="label">导演：</span>{{ row.director || '-' }}</p>
+                    <p><span class="label">主演：</span>{{ row.actors || '-' }}</p>
+                    <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
+                    <p><span class="label">地区：</span>{{ row.region || '-' }}</p>
+                    <p><span class="label">评分：</span>{{ Number(row.score || 0).toFixed(1) }}</p>
+                    <p><span class="label">上映：</span>{{ row.releaseDate || '-' }}</p>
+                  </div>
+                  <div class="row-actions">
+                    <el-button type="primary" plain @click="editInterview(row.id)">修改</el-button>
+                    <el-popconfirm title="确认删除该电影吗？" @confirm="deleteInterview(row.id)">
+                      <template #reference>
+                        <el-button type="danger" plain>删除</el-button>
+                      </template>
+                    </el-popconfirm>
+                  </div>
+                </div>
               </div>
             </div>
             <el-empty v-if="!interviewListLoading && interviewRows.length === 0" description="暂无电影数据" />
-            <div class="pager" v-if="interviewRows.length > 0">
-              <el-pagination
-                v-model:current-page="interviewCurrentPage"
-                layout="prev, pager, next, total"
-                :page-size="PAGE_SIZE"
-                :total="interviewRows.length"
-              />
-            </div>
           </el-card>
         </template>
       </main>
@@ -950,6 +964,14 @@ onMounted(() => {
     >
       <el-form v-if="activeMenu === 'review'" label-position="top">
         <el-form-item label="专辑名称"><el-input v-model="reviewForm.albumTitle" /></el-form-item>
+        <el-form-item label="艺人"><el-input v-model="reviewForm.artist" /></el-form-item>
+        <el-form-item label="AI 辅助">
+          <div class="ai-generate-row">
+            <el-button type="success" plain :loading="aiGenerating" @click="onAiGenerateReview">AI 生成</el-button>
+            <span class="ai-generate-hint">请先手动填写年份；AI 将基于专辑名称、艺人和你填写的年份生成曲目、封面与乐评正文（曲目优先来自 Last.fm）</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="年份"><el-input v-model="reviewForm.year" placeholder="例如：2024" /></el-form-item>
         <el-form-item label="专辑封面（支持 JPG/PNG）">
           <el-upload
             class="cover-uploader"
@@ -982,7 +1004,6 @@ onMounted(() => {
             </div>
           </el-upload>
         </el-form-item>
-        <el-form-item label="艺人"><el-input v-model="reviewForm.artist" /></el-form-item>
         <el-form-item label="风格（可多选）">
           <el-checkbox-group v-model="reviewForm.genres" class="genre-checkbox-group">
             <el-checkbox v-for="item in REVIEW_GENRE_OPTIONS" :key="item.value" :label="item.value">
@@ -990,7 +1011,6 @@ onMounted(() => {
             </el-checkbox>
           </el-checkbox-group>
         </el-form-item>
-        <el-form-item label="年份"><el-input v-model="reviewForm.year" placeholder="例如：2024" /></el-form-item>
         <el-form-item label="音乐曲目（用 / 分隔）">
           <el-input v-model="reviewForm.tracks" placeholder="例如：Track 1 / Track 2 / Track 3" />
         </el-form-item>
@@ -1131,30 +1151,90 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.admin-page { min-height: 100vh; background: var(--dumb-bg); color: var(--dumb-text); padding: 22px; }
-.admin-header { position: relative; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 18px; }
+.admin-page { min-height: 100vh; background: #0a0a0a; color: #e0e0e0; padding: 22px; }
+.admin-header { display: flex; align-items: center; margin-bottom: 18px; }
 .admin-header h1 {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
-  font-size: 42px;
-  letter-spacing: 4px;
+  font-family: 'Cinzel', 'Playfair Display', serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: 8px;
+  color: #ffffff;
 }
-.admin-body { display: grid; grid-template-columns: 220px 1fr; gap: 16px; }
-.admin-side :deep(.el-menu) { border-right: none; background: var(--dumb-panel); border: 1px solid var(--dumb-border); border-radius: 10px; }
-.admin-main { display: grid; gap: 12px; }
-.admin-card { background: var(--dumb-panel); border-color: var(--dumb-border); }
-.review-filters { display: grid; grid-template-columns: 1.2fr 220px auto auto; gap: 10px; align-items: center; }
-.review-row { display: grid; grid-template-columns: 84px 1fr 140px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--dumb-border); }
-.review-row:last-child { border-bottom: none; }
-.row-cover-wrap { width: 84px; height: 84px; border: 1px solid var(--dumb-border); border-radius: 8px; overflow: hidden; }
+.back-home {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  line-height: 1;
+  z-index: 1;
+}
+.back-home:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+.admin-header .el-button { margin-left: auto; }
+.admin-header h1 {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: 'Cinzel', 'Playfair Display', serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: 8px;
+  color: #ffffff;
+}
+.admin-body { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+.admin-side :deep(.el-menu) {
+  border-right: none;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 8px 0;
+}
+.admin-side :deep(.el-menu-item) {
+  color: rgba(255,255,255,0.5);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  margin: 2px 8px;
+  transition: all 0.2s ease;
+}
+.admin-side :deep(.el-menu-item:hover) {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+}
+.admin-side :deep(.el-menu-item.is-active) {
+  background: rgba(255,255,255,0.08);
+  color: #ffffff;
+}
+.admin-main { display: grid; gap: 16px; }
+.admin-card {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(8px);
+}
+.admin-card :deep(.el-card__body) { color: #e0e0e0; }
+.review-filters { display: grid; grid-template-columns: 1.2fr 220px auto auto; gap: 10px; align-items: center; padding: 8px 0; }
+.review-row { display: grid; grid-template-columns: 84px 1fr 140px; gap: 14px; align-items: center; padding: 12px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;  background: rgba(255,255,255,0.02); }
+
+.list-rows { display: grid; gap: 12px; }
+.row-cover-wrap { width: 84px; height: 84px; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; background: #111; }
 .row-cover { width: 100%; height: 100%; object-fit: cover; }
 .row-info { display: grid; gap: 4px; }
 .row-info p { margin: 0; }
-.label { color: var(--dumb-muted); }
+.label { color: rgba(255,255,255,0.4); }
 .row-actions { display: grid; gap: 8px; justify-items: end; }
-.pager { display: flex; justify-content: flex-end; margin-top: 12px; }
 .cover-uploader { width: 100%; }
 .cover-upload-box {
   display: flex;
@@ -1162,13 +1242,26 @@ onMounted(() => {
   justify-content: center;
   width: 240px;
   height: 130px;
-  border: 1px dashed var(--dumb-border);
+  border: 1px dashed rgba(255,255,255,0.12);
   border-radius: 8px;
-  color: var(--dumb-muted);
+  color: rgba(255,255,255,0.4);
   cursor: pointer;
   overflow: hidden;
 }
 .cover-preview { width: 100%; height: 100%; object-fit: cover; }
+.ai-generate-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.ai-generate-hint {
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  line-height: 1.5;
+  flex: 1;
+  min-width: 200px;
+}
 .genre-checkbox-group {
   display: flex;
   flex-wrap: wrap;
@@ -1176,14 +1269,167 @@ onMounted(() => {
   max-height: 220px;
   overflow-y: auto;
   padding: 10px;
-  border: 1px solid var(--dumb-border);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
 }
 @media (max-width: 1100px) {
   .admin-body { grid-template-columns: 1fr; }
-  .admin-header h1 { position: static; transform: none; }
-  .admin-header { justify-content: space-between; }
+  .admin-header h1 { position: static; transform: none; font-size: 1.6rem; letter-spacing: 4px; }
+  .admin-header { flex-wrap: wrap; gap: 10px; }
+  .admin-header .el-button { margin-left: 0; }
   .review-filters { grid-template-columns: 1fr; }
   .review-row { grid-template-columns: 1fr; }
   .row-actions { justify-items: start; grid-auto-flow: column; justify-content: start; }
 }
+
+/* ═══════ Element Plus dark overrides ═══════ */
+/* buttons */
+.admin-page :deep(.el-button) {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+}
+.admin-page :deep(.el-button:hover) {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.admin-page :deep(.el-button--primary) {
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+  font-weight: 500;
+}
+.admin-page :deep(.el-button--primary:hover) {
+  background: #ccc;
+  border-color: #ccc;
+  color: #000;
+}
+.admin-page :deep(.el-button--danger) {
+  background: rgba(220,60,60,0.15);
+  border-color: rgba(220,60,60,0.3);
+  color: #e06060;
+}
+.admin-page :deep(.el-button--danger:hover) {
+  background: rgba(220,60,60,0.25);
+  border-color: rgba(220,60,60,0.5);
+}
+.admin-page :deep(.el-button--warning) {
+  background: rgba(180,120,30,0.15);
+  border-color: rgba(180,120,30,0.3);
+  color: #d0a040;
+}
+.admin-page :deep(.el-button--success) {
+  background: rgba(40,160,80,0.15);
+  border-color: rgba(40,160,80,0.3);
+  color: #60c080;
+}
+
+/* inputs & selects */
+.admin-page :deep(.el-input__wrapper) {
+  background: rgba(255,255,255,0.04) !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+}
+.admin-page :deep(.el-input__wrapper:hover) { border-color: rgba(255,255,255,0.15); }
+.admin-page :deep(.el-input__wrapper.is-focus) { border-color: rgba(255,255,255,0.3); }
+.admin-page :deep(.el-input__inner) {
+  color: #e0e0e0;
+  font-family: 'Inter', sans-serif;
+}
+.admin-page :deep(.el-input__inner::placeholder) { color: rgba(255,255,255,0.25); }
+.admin-page :deep(.el-input-number .el-input__wrapper) { background: rgba(255,255,255,0.04) !important; }
+
+/* select dropdown */
+.admin-page :deep(.el-select-dropdown) {
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.admin-page :deep(.el-select-dropdown__item) {
+  color: rgba(255,255,255,0.7);
+}
+.admin-page :deep(.el-select-dropdown__item:hover) {
+  background: rgba(255,255,255,0.06);
+}
+.admin-page :deep(.el-select-dropdown__item.is-selected) {
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+}
+.admin-page :deep(.el-popper__arrow::before) {
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* cards */
+.admin-page :deep(.el-card) {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #e0e0e0;
+}
+
+/* dialog */
+.admin-page :deep(.el-dialog) {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+}
+.admin-page :deep(.el-dialog__header) { padding: 24px 24px 0; }
+.admin-page :deep(.el-dialog__title) {
+  color: #fff;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.admin-page :deep(.el-dialog__body) { padding: 20px 24px; color: #e0e0e0; }
+.admin-page :deep(.el-dialog__footer) { padding: 0 24px 24px; }
+
+/* form */
+.admin-page :deep(.el-form-item__label) {
+  color: rgba(255,255,255,0.6);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+}
+
+/* checkbox */
+.admin-page :deep(.el-checkbox__label) { color: #e0e0e0; font-size: 0.82rem; }
+.admin-page :deep(.el-checkbox__inner) {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.15);
+}
+.admin-page :deep(.el-checkbox.is-checked .el-checkbox__inner) {
+  background: #fff;
+  border-color: #fff;
+}
+
+/* popconfirm */
+.admin-page :deep(.el-popconfirm__action .el-button--primary) { background: #fff; color: #000; }
+
+/* rate */
+.admin-page :deep(.el-rate__icon) { color: rgba(255,255,255,0.12); }
+.admin-page :deep(.el-rate__icon.is-active) { color: #ffffff; }
+
+/* date picker */
+.admin-page :deep(.el-date-editor .el-input__wrapper) { background: rgba(255,255,255,0.04) !important; }
+.admin-page :deep(.el-picker-panel) {
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #e0e0e0;
+}
+.admin-page :deep(.el-date-table td) { color: #e0e0e0; }
+.admin-page :deep(.el-date-table td.next-month) { color: rgba(255,255,255,0.2); }
+.admin-page :deep(.el-date-table td.current:not(.disabled) .el-date-table-cell__text) {
+  background: #fff;
+  color: #000;
+}
+
+/* empty state */
+.admin-page :deep(.el-empty__description) { color: rgba(255,255,255,0.3); }
+
+/* skeleton */
+.admin-page :deep(.el-skeleton__item) { background: rgba(255,255,255,0.04); }
 </style>

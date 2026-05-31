@@ -21,3 +21,16 @@ mybatis-plus:
 jwt:
   secret: ${JWT_SECRET:dumb-secret-key-change-in-production}
   expire-seconds: 86400
+
+# DeepSeek（OpenAI 兼容接口）。密钥务必用环境变量注入，勿提交到仓库。
+ai:
+  base-url: ${AI_BASE_URL:https://api.deepseek.com}
+  api-key: ${AI_API_KEY:}
+  model: ${AI_MODEL:deepseek-chat}
+
+# Last.fm API，用于拉取专辑曲目列表（不需要 OAuth 跳转）。
+lastfm:
+  enabled: ${LASTFM_ENABLED:true}
+  api-key: ${LASTFM_API_KEY:}
+  base-url: ${LASTFM_BASE_URL:https://ws.audioscrobbler.com/2.0/}
+  autocorrect: ${LASTFM_AUTOCORRECT:true}

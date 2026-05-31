@@ -87,7 +87,7 @@ onMounted(async () => {
     <FlowSceneBackdrop :intro-from-cube="introFromCube" />
     <div class="movie-content">
       <h2 class="page-title">MOVIE</h2>
-      <div class="filter-bar panel">
+      <div class="filter-bar">
         <el-input v-model="filters.keyword" placeholder="搜索电影名称/导演/主演" clearable class="filter-keyword" />
         <el-select v-model="filters.year" placeholder="年份" clearable class="filter-select">
           <el-option v-for="year in yearOptions" :key="year" :label="year" :value="year" />
@@ -128,14 +128,6 @@ onMounted(async () => {
   gap: 20px;
 }
 
-.panel {
-  background: rgba(8, 10, 22, 0.54);
-  border: 1px solid rgba(120, 136, 255, 0.2);
-  backdrop-filter: blur(7px);
-  border-radius: 12px;
-  padding: 14px;
-}
-
 .page-title {
   margin: 0;
   text-align: center;
@@ -143,15 +135,33 @@ onMounted(async () => {
   font-size: 1.8rem;
   letter-spacing: 4px;
 }
+
 .filter-bar {
   display: grid;
   grid-template-columns: 1.2fr 140px 180px 140px auto;
   gap: 10px;
   align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #222222;
 }
+
 .filter-keyword,
 .filter-select {
   width: 100%;
+}
+
+/* 重置按钮：纯文字风格 */
+.filter-bar .el-button {
+  background: transparent;
+  border: none;
+  color: #555555;
+  padding: 5px 12px;
+  font-size: 13px;
+}
+
+.filter-bar .el-button:hover {
+  color: #ffffff;
+  background: transparent;
 }
 .grid {
   display: grid;
