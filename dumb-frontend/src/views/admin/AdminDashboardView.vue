@@ -12,16 +12,135 @@ import RichEditor from '../../components/common/RichEditor.vue'
 const REVIEW_DEFAULT_SCORE = 8.5
 type AdminMenu = 'review' | 'news' | 'interview'
 
-const REVIEW_GENRE_OPTIONS = [
-  { label: '流行', value: 'POP' },
-  { label: '摇滚', value: 'ROCK' },
-  { label: '嘻哈', value: 'HIP_HOP' },
-  { label: '电子', value: 'ELECTRONIC' },
-  { label: '民谣', value: 'FOLK' },
-  { label: 'R&B', value: 'RNB' },
-  { label: '爵士', value: 'JAZZ' },
-  { label: '古典', value: 'CLASSICAL' },
+const REVIEW_GENRE_CATEGORIES = [
+  {
+    label: '流行 / 独立',
+    options: [
+      { label: '流行', value: '流行' },
+      { label: '独立流行', value: '独立流行' },
+      { label: '合成器流行', value: '合成器流行' },
+      { label: '梦幻流行', value: '梦幻流行' },
+      { label: '室内流行', value: '室内流行' },
+      { label: '巴洛克流行', value: '巴洛克流行' },
+      { label: '艺术流行', value: '艺术流行' },
+      { label: '舞曲流行', value: '舞曲流行' },
+      { label: '电子流行', value: '电子流行' },
+      { label: 'Hyperpop', value: 'Hyperpop' },
+      { label: '卧室流行', value: '卧室流行' },
+    ],
+  },
+  {
+    label: '摇滚',
+    options: [
+      { label: '摇滚', value: '摇滚' },
+      { label: '另类摇滚', value: '另类摇滚' },
+      { label: '独立摇滚', value: '独立摇滚' },
+      { label: '后摇', value: '后摇' },
+      { label: '数摇', value: '数摇' },
+      { label: '迷幻摇滚', value: '迷幻摇滚' },
+      { label: '前卫摇滚', value: '前卫摇滚' },
+      { label: '硬摇滚', value: '硬摇滚' },
+      { label: '情绪摇滚', value: '情绪摇滚' },
+      { label: '中西部情绪', value: '中西部情绪' },
+    ],
+  },
+  {
+    label: '嘻哈 / Rap',
+    options: [
+      { label: '嘻哈', value: '嘻哈' },
+      { label: '陷阱', value: '陷阱' },
+      { label: 'Drill', value: 'Drill' },
+      { label: 'Boom Bap', value: 'Boom Bap' },
+      { label: '意识嘻哈', value: '意识嘻哈' },
+      { label: '云雾说唱', value: '云雾说唱' },
+      { label: 'Plugg', value: 'Plugg' },
+      { label: 'Phonk', value: 'Phonk' },
+      { label: 'Rage', value: 'Rage' },
+      { label: '爵士说唱', value: '爵士说唱' },
+      { label: '另类说唱', value: '另类说唱' },
+      { label: 'Grime', value: 'Grime' },
+      { label: '抽象嘻哈', value: '抽象嘻哈' },
+      { label: 'mumble rap', value: 'mumble rap' },
+    ],
+  },
+  {
+    label: '电子',
+    options: [
+      { label: '电子', value: '电子' },
+      { label: 'House', value: 'House' },
+      { label: 'Techno', value: 'Techno' },
+      { label: 'Trance', value: 'Trance' },
+      { label: '鼓打贝斯', value: '鼓打贝斯' },
+      { label: 'Dubstep', value: 'Dubstep' },
+      { label: '未来贝斯', value: '未来贝斯' },
+      { label: 'Synthwave', value: 'Synthwave' },
+      { label: '蒸汽波', value: '蒸汽波' },
+      { label: '氛围音乐', value: '氛围音乐' },
+      { label: '智能舞曲', value: '智能舞曲' },
+      { label: 'Glitch', value: 'Glitch' },
+      { label: 'Deep House', value: 'Deep House' },
+      { label: 'Progressive House', value: 'Progressive House' },
+      { label: 'Breakbeat', value: 'Breakbeat' },
+      { label: 'Jungle', value: 'Jungle' },
+      { label: 'Electro', value: 'Electro' },
+      { label: 'Trip Hop', value: 'Trip Hop' },
+      { label: 'Chillwave', value: 'Chillwave' },
+      { label: 'witch house', value: 'witch house' },
+    ],
+  },
+  {
+    label: 'R&B / 灵魂',
+    options: [
+      { label: 'R&B', value: 'R&B' },
+      { label: '新灵魂乐', value: '新灵魂乐' },
+      { label: '另类R&B', value: '另类R&B' },
+      { label: 'Neo-Soul', value: 'Neo-Soul' },
+      { label: 'Quiet Storm', value: 'Quiet Storm' },
+      { label: '当代R&B', value: '当代R&B' },
+      { label: '放克', value: '放克' },
+      { label: '灵魂乐', value: '灵魂乐' },
+    ],
+  },
+  {
+    label: '爵士',
+    options: [
+      { label: '爵士', value: '爵士' },
+      { label: '摇摆乐', value: '摇摆乐' },
+      { label: 'Bebop', value: 'Bebop' },
+      { label: 'Cool Jazz', value: 'Cool Jazz' },
+      { label: '自由爵士', value: '自由爵士' },
+      { label: '融合爵士', value: '融合爵士' },
+    ],
+  },
+  {
+    label: '东亚流行',
+    options: [
+      { label: 'K-Pop', value: 'K-Pop' },
+      { label: 'J-Pop', value: 'J-Pop' },
+      { label: 'C-Pop', value: 'C-Pop' },
+    ],
+  },
+  {
+    label: '古典 / 器乐',
+    options: [
+      { label: '古典', value: '古典' },
+      { label: '极简主义', value: '极简主义' },
+      { label: '新古典', value: '新古典' },
+      { label: '电影原声', value: '电影原声' },
+      { label: '管弦乐', value: '管弦乐' },
+      { label: '钢琴独奏', value: '钢琴独奏' },
+    ],
+  },
+  {
+    label: '其他',
+    options: [
+      { label: '福音', value: '福音' },
+      { label: '民谣', value: '民谣' },
+    ],
+  },
 ] as const
+
+const allReviewGenres = REVIEW_GENRE_CATEGORIES.flatMap((c) => c.options)
 
 const ANIME_GENRE_OPTIONS = [
   '热血', '战斗', '格斗', '冒险', '王道', '少年', '少女', '青年', '后宫', '逆后宫',
@@ -112,7 +231,14 @@ const newsSubmitting = ref(false)
 const interviewSubmitting = ref(false)
 const coverUploading = ref(false)
 const aiGenerating = ref(false)
+const genreFilterKeyword = ref('')
 const BACKEND_ORIGIN = 'http://localhost:8080'
+
+const menuItems = [
+  { key: 'review' as AdminMenu, label: '音乐管理' },
+  { key: 'news' as AdminMenu, label: '动漫管理' },
+  { key: 'interview' as AdminMenu, label: '电影管理' },
+]
 
 const reviewQuery = reactive({
   keyword: '',
@@ -297,10 +423,10 @@ function parseReviewContent(rawContent: string) {
   let tracks = ''
   let backgroundImage = ''
   let description = rawContent
-  
+
   const lines = rawContent.split('\n')
   let processedLines: string[] = []
-  
+
   for (const line of lines) {
     if (line.startsWith('风格：')) {
       const raw = line.replace('风格：', '').trim()
@@ -315,7 +441,7 @@ function parseReviewContent(rawContent: string) {
       processedLines.push(line)
     }
   }
-  
+
   description = processedLines.join('\n').trim()
   return { genres, year, tracks, backgroundImage, description }
 }
@@ -326,6 +452,15 @@ function stripHtmlText(value: string) {
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function toggleGenre(value: string) {
+  const idx = reviewForm.genres.indexOf(value)
+  if (idx >= 0) {
+    reviewForm.genres.splice(idx, 1)
+  } else {
+    reviewForm.genres.push(value)
+  }
 }
 
 function hasReviewAiTargetFieldsFilled() {
@@ -342,6 +477,57 @@ function hasExistingAiDraftContent() {
     || stripHtmlText(reviewForm.description).length > 0
     || reviewForm.coverImage.trim().length > 0
   )
+}
+
+function hasNewsAiTargetFieldsFilled() {
+  return Boolean(newsForm.title.trim())
+}
+
+function hasExistingNewsAiDraftContent() {
+  return (
+    stripHtmlText(newsForm.content).length > 0
+    || newsForm.studio.trim().length > 0
+    || newsForm.genres.length > 0
+    || newsForm.coverImage.trim().length > 0
+  )
+}
+
+async function onAiGenerateNews() {
+  if (!hasNewsAiTargetFieldsFilled()) {
+    ElMessage.warning('请先填写动漫名称')
+    return
+  }
+  if (hasExistingNewsAiDraftContent()) {
+    try {
+      await ElMessageBox.confirm('将覆盖当前已填写的内容，是否继续？', '确认覆盖', {
+        type: 'warning',
+        confirmButtonText: '覆盖',
+        cancelButtonText: '取消',
+      })
+    } catch {
+      return
+    }
+  }
+  aiGenerating.value = true
+  try {
+    const res = await animeApi.aiGenerate({
+      title: newsForm.title.trim(),
+    })
+    const data = res.data
+    if (data.title) newsForm.title = data.title
+    if (data.content) newsForm.content = data.content
+    if (data.score !== undefined) newsForm.score = Number(data.score)
+    if (data.studio) newsForm.studio = data.studio
+    if (data.genres) newsForm.genres = data.genres
+    if (data.releaseDate) newsForm.releaseDate = data.releaseDate
+    if (data.coverImage) newsForm.coverImage = data.coverImage
+    if (data.backgroundImage) newsForm.backgroundImage = data.backgroundImage
+    ElMessage.success('AI 生成完成，请核对后再发布')
+  } catch (e: any) {
+    ElMessage.error(e?.message || 'AI 生成失败')
+  } finally {
+    aiGenerating.value = false
+  }
 }
 
 async function onAiGenerateReview() {
@@ -375,6 +561,62 @@ async function onAiGenerateReview() {
     if (data.tracks) reviewForm.tracks = data.tracks
     if (data.description) reviewForm.description = data.description
     if (data.coverImage) reviewForm.coverImage = data.coverImage
+    ElMessage.success('AI 生成完成，请核对后再发布')
+  } catch (e: any) {
+    ElMessage.error(e?.message || 'AI 生成失败')
+  } finally {
+    aiGenerating.value = false
+  }
+}
+
+function hasInterviewAiTargetFieldsFilled() {
+  return Boolean(interviewForm.title.trim())
+}
+
+function hasExistingInterviewAiDraftContent() {
+  return (
+    stripHtmlText(interviewForm.content).length > 0
+    || interviewForm.director.trim().length > 0
+    || interviewForm.actors.trim().length > 0
+    || interviewForm.region.trim().length > 0
+    || interviewForm.genres.length > 0
+    || interviewForm.coverImage.trim().length > 0
+    || interviewForm.backgroundImage.trim().length > 0
+  )
+}
+
+async function onAiGenerateInterview() {
+  if (!hasInterviewAiTargetFieldsFilled()) {
+    ElMessage.warning('请先填写电影名称')
+    return
+  }
+  if (hasExistingInterviewAiDraftContent()) {
+    try {
+      await ElMessageBox.confirm('将覆盖当前已填写的内容，是否继续？', '确认覆盖', {
+        type: 'warning',
+        confirmButtonText: '覆盖',
+        cancelButtonText: '取消',
+      })
+    } catch {
+      return
+    }
+  }
+  aiGenerating.value = true
+  try {
+    const res = await movieApi.aiGenerate({
+      title: interviewForm.title.trim(),
+    })
+    const data = res.data
+    if (data.title) interviewForm.title = data.title
+    if (data.content) interviewForm.content = data.content
+    if (data.score !== undefined) interviewForm.score = Number(data.score)
+    if (data.director) interviewForm.director = data.director
+    if (data.actors) interviewForm.actors = data.actors
+    if (data.region) interviewForm.region = data.region
+    if (data.genres) interviewForm.genres = data.genres
+    if (data.releaseDate) interviewForm.releaseDate = data.releaseDate
+    if (data.coverImage) interviewForm.coverImage = data.coverImage
+    if (data.backgroundImage) interviewForm.backgroundImage = data.backgroundImage
     ElMessage.success('AI 生成完成，请核对后再发布')
   } catch (e: any) {
     ElMessage.error(e?.message || 'AI 生成失败')
@@ -828,130 +1070,141 @@ onMounted(() => {
 
     <section class="admin-body">
       <aside class="admin-side">
-        <el-menu :default-active="activeMenu" @select="handleMenuSelect">
-          <el-menu-item index="review">音乐管理</el-menu-item>
-          <el-menu-item index="news">动漫管理</el-menu-item>
-          <el-menu-item index="interview">电影管理</el-menu-item>
-        </el-menu>
+        <nav class="admin-nav">
+          <button
+            v-for="item in menuItems"
+            :key="item.key"
+            :class="{ active: activeMenu === item.key }"
+            @click="handleMenuSelect(item.key)"
+          >
+            {{ item.label }}
+          </button>
+        </nav>
       </aside>
 
       <main class="admin-main">
         <template v-if="activeMenu === 'review'">
-          <el-card class="admin-card">
-            <div class="review-filters">
-              <el-input v-model="reviewQuery.keyword" placeholder="关键词搜索（标题/艺人/专辑）" clearable />
-              <el-select v-model="reviewQuery.genre" placeholder="风格筛选" clearable>
-                <el-option v-for="item in REVIEW_GENRE_OPTIONS" :key="item.value" :label="item.label" :value="item.value" />
-              </el-select>
-              <el-button type="primary" @click="onReviewSearch">搜索</el-button>
-              <el-button @click="resetReviewSearch">重置</el-button>
+          <section class="filter-bar">
+            <div class="filter-group">
+              <span class="filter-label">SEARCH:</span>
+              <el-input v-model="reviewQuery.keyword" placeholder="关键词搜索" clearable @keyup.enter="onReviewSearch" />
             </div>
-          </el-card>
+            <div class="filter-group">
+              <span class="filter-label">GENRE:</span>
+              <el-select v-model="reviewQuery.genre" clearable placeholder="ALL">
+                <el-option v-for="item in allReviewGenres" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </div>
+            <div class="filter-actions">
+              <button class="wax-btn" @click="onReviewSearch">搜索</button>
+              <button class="wax-btn secondary" @click="resetReviewSearch">重置</button>
+            </div>
+          </section>
 
-          <el-card class="admin-card" v-loading="reviewListLoading">
+          <div class="list-section" v-loading="reviewListLoading">
             <div class="list-rows" v-if="reviewRows.length > 0">
-              <div>
-                <div v-for="row in reviewRows" :key="row.id" class="review-row">
-                  <div class="row-cover-wrap">
-                    <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
-                  </div>
-                  <div class="row-info">
-                    <p><span class="label">专辑标题：</span>{{ row.albumTitle || '-' }}</p>
-                    <p><span class="label">艺人：</span>{{ row.artist || '-' }}</p>
-                    <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
-                    <p><span class="label">评分：</span>{{ row.score }}</p>
-                  </div>
-                  <div class="row-actions">
-                    <el-button type="primary" plain @click="editReview(row.id)">修改</el-button>
-                    <el-popconfirm title="确认删除该乐评吗？" @confirm="deleteReview(row.id)">
-                      <template #reference>
-                        <el-button type="danger" plain>删除</el-button>
-                      </template>
-                    </el-popconfirm>
-                  </div>
+              <div v-for="row in reviewRows" :key="row.id" class="data-card">
+                <div class="card-cover-wrap">
+                  <img class="card-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
+                </div>
+                <div class="card-info">
+                  <p><span class="info-label">专辑</span><span class="info-value">{{ row.albumTitle || '-' }}</span></p>
+                  <p><span class="info-label">艺人</span><span class="info-value">{{ row.artist || '-' }}</span></p>
+                  <p><span class="info-label">风格</span><span class="info-value">{{ row.genre || '-' }}</span></p>
+                  <p><span class="info-label">评分</span><span class="info-value">{{ row.score }}</span></p>
+                </div>
+                <div class="card-actions">
+                  <el-button size="small" @click="editReview(row.id)">修改</el-button>
+                  <el-popconfirm title="确认删除该乐评吗？" @confirm="deleteReview(row.id)">
+                    <template #reference>
+                      <el-button size="small" class="btn-danger">删除</el-button>
+                    </template>
+                  </el-popconfirm>
                 </div>
               </div>
             </div>
             <el-empty v-if="!reviewListLoading && reviewRows.length === 0" description="暂无乐评数据" />
-          </el-card>
+          </div>
         </template>
 
         <template v-else-if="activeMenu === 'news'">
-          <el-card class="admin-card">
-            <div class="review-filters">
-              <el-input v-model="newsQuery.keyword" placeholder="关键词搜索（动漫名称/制片商/内容）" clearable style="flex: 1" />
-              <el-button type="primary" @click="onNewsSearch">搜索</el-button>
-              <el-button @click="resetNewsSearch">重置</el-button>
+          <section class="filter-bar">
+            <div class="filter-group">
+              <span class="filter-label">SEARCH:</span>
+              <el-input v-model="newsQuery.keyword" placeholder="关键词搜索" clearable @keyup.enter="onNewsSearch" />
             </div>
-          </el-card>
+            <div class="filter-actions">
+              <button class="wax-btn" @click="onNewsSearch">搜索</button>
+              <button class="wax-btn secondary" @click="resetNewsSearch">重置</button>
+            </div>
+          </section>
 
-          <el-card class="admin-card" v-loading="newsListLoading">
+          <div class="list-section" v-loading="newsListLoading">
             <div class="list-rows" v-if="newsRows.length > 0">
-              <div>
-                <div v-for="row in newsRows" :key="row.id" class="review-row">
-                  <div class="row-cover-wrap" v-if="row.coverImage">
-                    <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
-                  </div>
-                  <div class="row-info" :style="row.coverImage ? {} : { gridColumn: '1 / span 2' }">
-                    <p><span class="label">动漫名称：</span>{{ row.title }}</p>
-                    <p><span class="label">制片商：</span>{{ row.studio || '-' }}</p>
-                    <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
-                    <p><span class="label">评分：</span>{{ Number(row.score || 0).toFixed(1) }}</p>
-                    <p><span class="label">发行年月：</span>{{ row.releaseDate || '-' }}</p>
-                  </div>
-                  <div class="row-actions">
-                    <el-button type="primary" plain @click="editNews(row.id)">修改</el-button>
-                    <el-popconfirm title="确认删除该动漫吗？" @confirm="deleteNews(row.id)">
-                      <template #reference>
-                        <el-button type="danger" plain>删除</el-button>
-                      </template>
-                    </el-popconfirm>
-                  </div>
+              <div v-for="row in newsRows" :key="row.id" class="data-card">
+                <div class="card-cover-wrap" v-if="row.coverImage">
+                  <img class="card-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
+                </div>
+                <div class="card-info" :class="{ 'no-cover': !row.coverImage }">
+                  <p><span class="info-label">名称</span><span class="info-value">{{ row.title }}</span></p>
+                  <p><span class="info-label">制片商</span><span class="info-value">{{ row.studio || '-' }}</span></p>
+                  <p><span class="info-label">风格</span><span class="info-value">{{ row.genre || '-' }}</span></p>
+                  <p><span class="info-label">评分</span><span class="info-value">{{ Number(row.score || 0).toFixed(1) }}</span></p>
+                  <p><span class="info-label">发行</span><span class="info-value">{{ row.releaseDate || '-' }}</span></p>
+                </div>
+                <div class="card-actions">
+                  <el-button size="small" @click="editNews(row.id)">修改</el-button>
+                  <el-popconfirm title="确认删除该动漫吗？" @confirm="deleteNews(row.id)">
+                    <template #reference>
+                      <el-button size="small" class="btn-danger">删除</el-button>
+                    </template>
+                  </el-popconfirm>
                 </div>
               </div>
             </div>
             <el-empty v-if="!newsListLoading && newsRows.length === 0" description="暂无动漫数据" />
-          </el-card>
+          </div>
         </template>
 
         <template v-else-if="activeMenu === 'interview'">
-          <el-card class="admin-card">
-            <div class="review-filters">
-              <el-input v-model="interviewQuery.keyword" placeholder="关键词搜索（电影名称/导演/主演/简介）" clearable style="flex: 1" />
-              <el-button type="primary" @click="onInterviewSearch">搜索</el-button>
-              <el-button @click="resetInterviewSearch">重置</el-button>
+          <section class="filter-bar">
+            <div class="filter-group">
+              <span class="filter-label">SEARCH:</span>
+              <el-input v-model="interviewQuery.keyword" placeholder="关键词搜索" clearable @keyup.enter="onInterviewSearch" />
             </div>
-          </el-card>
+            <div class="filter-actions">
+              <button class="wax-btn" @click="onInterviewSearch">搜索</button>
+              <button class="wax-btn secondary" @click="resetInterviewSearch">重置</button>
+            </div>
+          </section>
 
-          <el-card class="admin-card" v-loading="interviewListLoading">
+          <div class="list-section" v-loading="interviewListLoading">
             <div class="list-rows" v-if="interviewRows.length > 0">
-              <div>
-                <div v-for="row in interviewRows" :key="row.id" class="review-row">
-                  <div class="row-cover-wrap" v-if="row.coverImage">
-                    <img class="row-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
-                  </div>
-                  <div class="row-info" :style="row.coverImage ? {} : { gridColumn: '1 / span 2' }">
-                    <p><span class="label">电影名称：</span>{{ row.title || '-' }}</p>
-                    <p><span class="label">导演：</span>{{ row.director || '-' }}</p>
-                    <p><span class="label">主演：</span>{{ row.actors || '-' }}</p>
-                    <p><span class="label">风格：</span>{{ row.genre || '-' }}</p>
-                    <p><span class="label">地区：</span>{{ row.region || '-' }}</p>
-                    <p><span class="label">评分：</span>{{ Number(row.score || 0).toFixed(1) }}</p>
-                    <p><span class="label">上映：</span>{{ row.releaseDate || '-' }}</p>
-                  </div>
-                  <div class="row-actions">
-                    <el-button type="primary" plain @click="editInterview(row.id)">修改</el-button>
-                    <el-popconfirm title="确认删除该电影吗？" @confirm="deleteInterview(row.id)">
-                      <template #reference>
-                        <el-button type="danger" plain>删除</el-button>
-                      </template>
-                    </el-popconfirm>
-                  </div>
+              <div v-for="row in interviewRows" :key="row.id" class="data-card">
+                <div class="card-cover-wrap" v-if="row.coverImage">
+                  <img class="card-cover" :src="resolveCoverUrl(row.coverImage)" alt="cover" />
+                </div>
+                <div class="card-info" :class="{ 'no-cover': !row.coverImage }">
+                  <p><span class="info-label">名称</span><span class="info-value">{{ row.title || '-' }}</span></p>
+                  <p><span class="info-label">导演</span><span class="info-value">{{ row.director || '-' }}</span></p>
+                  <p><span class="info-label">主演</span><span class="info-value">{{ row.actors || '-' }}</span></p>
+                  <p><span class="info-label">风格</span><span class="info-value">{{ row.genre || '-' }}</span></p>
+                  <p><span class="info-label">地区</span><span class="info-value">{{ row.region || '-' }}</span></p>
+                  <p><span class="info-label">评分</span><span class="info-value">{{ Number(row.score || 0).toFixed(1) }}</span></p>
+                  <p><span class="info-label">上映</span><span class="info-value">{{ row.releaseDate || '-' }}</span></p>
+                </div>
+                <div class="card-actions">
+                  <el-button size="small" @click="editInterview(row.id)">修改</el-button>
+                  <el-popconfirm title="确认删除该电影吗？" @confirm="deleteInterview(row.id)">
+                    <template #reference>
+                      <el-button size="small" class="btn-danger">删除</el-button>
+                    </template>
+                  </el-popconfirm>
                 </div>
               </div>
             </div>
             <el-empty v-if="!interviewListLoading && interviewRows.length === 0" description="暂无电影数据" />
-          </el-card>
+          </div>
         </template>
       </main>
     </section>
@@ -972,6 +1225,12 @@ onMounted(() => {
           </div>
         </el-form-item>
         <el-form-item label="年份"><el-input v-model="reviewForm.year" placeholder="例如：2024" /></el-form-item>
+        <el-form-item label="评分（0-10分）">
+          <div class="score-input-row">
+            <el-input-number v-model="reviewForm.score" :min="0" :max="10" :step="0.1" :precision="1" style="width: 200px" />
+            <span class="score-preview">★ {{ Number(reviewForm.score || 0).toFixed(1) }}</span>
+          </div>
+        </el-form-item>
         <el-form-item label="专辑封面（支持 JPG/PNG）">
           <el-upload
             class="cover-uploader"
@@ -1005,11 +1264,32 @@ onMounted(() => {
           </el-upload>
         </el-form-item>
         <el-form-item label="风格（可多选）">
-          <el-checkbox-group v-model="reviewForm.genres" class="genre-checkbox-group">
-            <el-checkbox v-for="item in REVIEW_GENRE_OPTIONS" :key="item.value" :label="item.value">
-              {{ item.label }}
-            </el-checkbox>
-          </el-checkbox-group>
+          <div class="genre-cloud">
+            <div class="genre-search">
+              <el-input v-model="genreFilterKeyword" placeholder="搜索风格..." clearable />
+            </div>
+            <template v-for="cat in REVIEW_GENRE_CATEGORIES" :key="cat.label">
+              <div
+                v-if="cat.options.some(opt => !genreFilterKeyword || opt.label.toLowerCase().includes(genreFilterKeyword.toLowerCase()))"
+                class="genre-category"
+              >
+                <h4 class="genre-cat-title">{{ cat.label }}</h4>
+                <div class="genre-tags">
+                  <button
+                    v-for="item in cat.options"
+                    :key="item.value"
+                    type="button"
+                    class="genre-tag"
+                    :class="{ active: reviewForm.genres.includes(item.value) }"
+                    :style="genreFilterKeyword && !item.label.toLowerCase().includes(genreFilterKeyword.toLowerCase()) ? 'display: none' : ''"
+                    @click="toggleGenre(item.value)"
+                  >
+                    {{ item.label }}
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
         </el-form-item>
         <el-form-item label="音乐曲目（用 / 分隔）">
           <el-input v-model="reviewForm.tracks" placeholder="例如：Track 1 / Track 2 / Track 3" />
@@ -1021,6 +1301,12 @@ onMounted(() => {
 
       <el-form v-else-if="activeMenu === 'news'" label-position="top">
         <el-form-item label="动漫名称"><el-input v-model="newsForm.title" /></el-form-item>
+        <el-form-item label="AI 辅助">
+          <div class="ai-generate-row">
+            <el-button type="success" plain :loading="aiGenerating" @click="onAiGenerateNews">AI 生成</el-button>
+            <span class="ai-generate-hint">基于动漫名称自动生成分数、制片商、风格、发行日期、封面与评论内容</span>
+          </div>
+        </el-form-item>
         <el-form-item label="封面（选填，支持 JPG/PNG）">
           <el-upload
             class="cover-uploader"
@@ -1074,6 +1360,12 @@ onMounted(() => {
 
       <el-form v-else label-position="top">
         <el-form-item label="电影名称"><el-input v-model="interviewForm.title" /></el-form-item>
+        <el-form-item label="AI 辅助">
+          <div class="ai-generate-row">
+            <el-button type="success" plain :loading="aiGenerating" @click="onAiGenerateInterview">AI 生成</el-button>
+            <span class="ai-generate-hint">基于电影名称自动生成分数、导演、主演、地区、风格、上映日期、封面、背景图与简介内容</span>
+          </div>
+        </el-form-item>
         <el-form-item label="封面（选填，支持 JPG/PNG）">
           <el-upload
             class="cover-uploader"
@@ -1151,17 +1443,28 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.admin-page { min-height: 100vh; background: #0a0a0a; color: #e0e0e0; padding: 22px; }
-.admin-header { display: flex; align-items: center; margin-bottom: 18px; }
+.admin-page {
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  padding: 40px;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* ── Header ── */
+.admin-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
 .admin-header h1 {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  flex: 1;
+  text-align: center;
   margin: 0;
-  font-family: 'Cinzel', 'Playfair Display', serif;
-  font-size: 2.2rem;
-  font-weight: 400;
-  letter-spacing: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
   color: #ffffff;
 }
 .back-home {
@@ -1174,67 +1477,209 @@ onMounted(() => {
   border-radius: 6px;
   transition: all 0.2s ease;
   line-height: 1;
-  z-index: 1;
 }
 .back-home:hover {
   background: rgba(255,255,255,0.08);
   color: #fff;
 }
-.admin-header .el-button { margin-left: auto; }
-.admin-header h1 {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  font-family: 'Cinzel', 'Playfair Display', serif;
-  font-size: 2.2rem;
-  font-weight: 400;
-  letter-spacing: 8px;
-  color: #ffffff;
+
+/* ── Layout ── */
+.admin-body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 28px;
 }
-.admin-body { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
-.admin-side :deep(.el-menu) {
-  border-right: none;
-  background: rgba(255,255,255,0.03);
+
+/* ── Sidebar ── */
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px;
-  padding: 8px 0;
+  padding: 8px;
 }
-.admin-side :deep(.el-menu-item) {
-  color: rgba(255,255,255,0.5);
+.admin-nav button {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.45);
   font-family: 'Inter', sans-serif;
   font-size: 0.82rem;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  text-align: left;
+  padding: 10px 14px;
   border-radius: 8px;
-  margin: 2px 8px;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
-.admin-side :deep(.el-menu-item:hover) {
-  background: rgba(255,255,255,0.06);
+.admin-nav button:hover {
+  background: rgba(255,255,255,0.04);
   color: rgba(255,255,255,0.8);
 }
-.admin-side :deep(.el-menu-item.is-active) {
-  background: rgba(255,255,255,0.08);
+.admin-nav button.active {
+  background: rgba(255,255,255,0.07);
   color: #ffffff;
 }
-.admin-main { display: grid; gap: 16px; }
-.admin-card {
-  background: rgba(255,255,255,0.03) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  border-radius: 12px !important;
-  backdrop-filter: blur(8px);
-}
-.admin-card :deep(.el-card__body) { color: #e0e0e0; }
-.review-filters { display: grid; grid-template-columns: 1.2fr 220px auto auto; gap: 10px; align-items: center; padding: 8px 0; }
-.review-row { display: grid; grid-template-columns: 84px 1fr 140px; gap: 14px; align-items: center; padding: 12px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;  background: rgba(255,255,255,0.02); }
 
-.list-rows { display: grid; gap: 12px; }
-.row-cover-wrap { width: 84px; height: 84px; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; background: #111; }
-.row-cover { width: 100%; height: 100%; object-fit: cover; }
-.row-info { display: grid; gap: 4px; }
-.row-info p { margin: 0; }
-.label { color: rgba(255,255,255,0.4); }
-.row-actions { display: grid; gap: 8px; justify-items: end; }
+/* ── Main ── */
+.admin-main {
+  display: grid;
+  gap: 20px;
+}
+
+/* ── Filter Bar ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-label {
+  font-size: 0.7rem;
+  color: #fff;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* wax-btn (matches frontend list pages) */
+.wax-btn {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 7px 18px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+.wax-btn:hover {
+  background: #ccc;
+}
+.wax-btn.secondary {
+  background: transparent;
+  color: #666;
+  border: 1px solid #333;
+}
+.wax-btn.secondary:hover {
+  border-color: #555;
+  color: #fff;
+}
+
+/* ── List Section ── */
+.list-section {
+  min-height: 200px;
+}
+.list-rows {
+  display: grid;
+  gap: 12px;
+}
+
+/* ── Data Card ── */
+.data-card {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  transition: all 0.25s ease;
+}
+.data-card:hover {
+  background: rgba(255,255,255,0.035);
+  border-color: rgba(255,255,255,0.1);
+  transform: translateY(-1px);
+}
+
+.card-cover-wrap {
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.card-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.data-card:hover .card-cover {
+  transform: scale(1.08);
+}
+
+.card-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 24px;
+}
+.card-info.no-cover {
+  grid-column: 1 / span 2;
+}
+.card-info p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.info-label {
+  color: rgba(255,255,255,0.35);
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  min-width: 40px;
+}
+.info-value {
+  color: #e0e0e0;
+  font-size: 0.85rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-danger {
+  background: rgba(220,60,60,0.12) !important;
+  border-color: rgba(220,60,60,0.3) !important;
+  color: #e06060 !important;
+}
+.btn-danger:hover {
+  background: rgba(220,60,60,0.22) !important;
+  border-color: rgba(220,60,60,0.5) !important;
+}
+
+/* ── Score Input ── */
+.score-input-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.score-preview {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Upload ── */
 .cover-uploader { width: 100%; }
 .cover-upload-box {
   display: flex;
@@ -1249,6 +1694,8 @@ onMounted(() => {
   overflow: hidden;
 }
 .cover-preview { width: 100%; height: 100%; object-fit: cover; }
+
+/* ── AI Row ── */
 .ai-generate-row {
   display: flex;
   flex-wrap: wrap;
@@ -1262,174 +1709,90 @@ onMounted(() => {
   flex: 1;
   min-width: 200px;
 }
-.genre-checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  max-height: 220px;
-  overflow-y: auto;
-  padding: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.02);
-  border-radius: 8px;
-}
-@media (max-width: 1100px) {
-  .admin-body { grid-template-columns: 1fr; }
-  .admin-header h1 { position: static; transform: none; font-size: 1.6rem; letter-spacing: 4px; }
-  .admin-header { flex-wrap: wrap; gap: 10px; }
-  .admin-header .el-button { margin-left: 0; }
-  .review-filters { grid-template-columns: 1fr; }
-  .review-row { grid-template-columns: 1fr; }
-  .row-actions { justify-items: start; grid-auto-flow: column; justify-content: start; }
-}
 
-/* ═══════ Element Plus dark overrides ═══════ */
-/* buttons */
-.admin-page :deep(.el-button) {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #e0e0e0;
+/* ── Genre Cloud ── */
+.genre-cloud {
+  display: grid;
+  gap: 4px;
+}
+.genre-search {
+  margin-bottom: 8px;
+}
+.genre-search :deep(.el-input__wrapper) {
+  background: rgba(255,255,255,0.03);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
   border-radius: 8px;
+}
+.genre-search :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+.genre-category {
+  margin-top: 10px;
+}
+.genre-cat-title {
+  margin: 0 0 8px;
   font-family: 'Inter', sans-serif;
-  font-size: 0.82rem;
-}
-.admin-page :deep(.el-button:hover) {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.2);
-  color: #fff;
-}
-.admin-page :deep(.el-button--primary) {
-  background: #fff;
-  border-color: #fff;
-  color: #000;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   font-weight: 500;
 }
-.admin-page :deep(.el-button--primary:hover) {
-  background: #ccc;
-  border-color: #ccc;
-  color: #000;
+.genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.admin-page :deep(.el-button--danger) {
-  background: rgba(220,60,60,0.15);
-  border-color: rgba(220,60,60,0.3);
-  color: #e06060;
-}
-.admin-page :deep(.el-button--danger:hover) {
-  background: rgba(220,60,60,0.25);
-  border-color: rgba(220,60,60,0.5);
-}
-.admin-page :deep(.el-button--warning) {
-  background: rgba(180,120,30,0.15);
-  border-color: rgba(180,120,30,0.3);
-  color: #d0a040;
-}
-.admin-page :deep(.el-button--success) {
-  background: rgba(40,160,80,0.15);
-  border-color: rgba(40,160,80,0.3);
-  color: #60c080;
-}
-
-/* inputs & selects */
-.admin-page :deep(.el-input__wrapper) {
-  background: rgba(255,255,255,0.04) !important;
-  box-shadow: none !important;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
-}
-.admin-page :deep(.el-input__wrapper:hover) { border-color: rgba(255,255,255,0.15); }
-.admin-page :deep(.el-input__wrapper.is-focus) { border-color: rgba(255,255,255,0.3); }
-.admin-page :deep(.el-input__inner) {
-  color: #e0e0e0;
+.genre-tag {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.55);
+  padding: 5px 14px;
+  border-radius: 20px;
   font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.4;
 }
-.admin-page :deep(.el-input__inner::placeholder) { color: rgba(255,255,255,0.25); }
-.admin-page :deep(.el-input-number .el-input__wrapper) { background: rgba(255,255,255,0.04) !important; }
-
-/* select dropdown */
-.admin-page :deep(.el-select-dropdown) {
-  background: #1a1a1a;
-  border: 1px solid rgba(255,255,255,0.08);
+.genre-tag:hover {
+  border-color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.85);
 }
-.admin-page :deep(.el-select-dropdown__item) {
-  color: rgba(255,255,255,0.7);
-}
-.admin-page :deep(.el-select-dropdown__item:hover) {
-  background: rgba(255,255,255,0.06);
-}
-.admin-page :deep(.el-select-dropdown__item.is-selected) {
-  color: #fff;
-  background: rgba(255,255,255,0.08);
-}
-.admin-page :deep(.el-popper__arrow::before) {
-  background: #1a1a1a;
-  border: 1px solid rgba(255,255,255,0.08);
+.genre-tag.active {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+  font-weight: 500;
 }
 
-/* cards */
-.admin-page :deep(.el-card) {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  color: #e0e0e0;
+/* ── Dialog Footer ── */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-/* dialog */
-.admin-page :deep(.el-dialog) {
-  background: #141414;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
-}
-.admin-page :deep(.el-dialog__header) { padding: 24px 24px 0; }
-.admin-page :deep(.el-dialog__title) {
-  color: #fff;
-  font-family: 'Playfair Display', serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-.admin-page :deep(.el-dialog__body) { padding: 20px 24px; color: #e0e0e0; }
-.admin-page :deep(.el-dialog__footer) { padding: 0 24px 24px; }
-
-/* form */
-.admin-page :deep(.el-form-item__label) {
-  color: rgba(255,255,255,0.6);
-  font-family: 'Inter', sans-serif;
-  font-size: 0.82rem;
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .admin-body { grid-template-columns: 1fr; }
+  .admin-header h1 { font-size: 1.6rem; }
+  .admin-header { flex-wrap: wrap; gap: 10px; }
+  .filter-bar { gap: 14px; }
+  .filter-actions { width: 100%; margin-left: 0; }
+  .data-card { grid-template-columns: 64px 1fr auto; gap: 14px; padding: 12px; }
+  .card-cover-wrap { width: 64px; height: 64px; }
+  .card-info { grid-template-columns: 1fr; }
 }
 
-/* checkbox */
-.admin-page :deep(.el-checkbox__label) { color: #e0e0e0; font-size: 0.82rem; }
-.admin-page :deep(.el-checkbox__inner) {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.15);
+@media (max-width: 640px) {
+  .admin-page { padding: 24px 20px; }
+  .data-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .card-cover-wrap { width: 100%; height: 160px; }
+  .card-info.no-cover { grid-column: auto; }
+  .card-actions { justify-content: flex-start; }
 }
-.admin-page :deep(.el-checkbox.is-checked .el-checkbox__inner) {
-  background: #fff;
-  border-color: #fff;
-}
-
-/* popconfirm */
-.admin-page :deep(.el-popconfirm__action .el-button--primary) { background: #fff; color: #000; }
-
-/* rate */
-.admin-page :deep(.el-rate__icon) { color: rgba(255,255,255,0.12); }
-.admin-page :deep(.el-rate__icon.is-active) { color: #ffffff; }
-
-/* date picker */
-.admin-page :deep(.el-date-editor .el-input__wrapper) { background: rgba(255,255,255,0.04) !important; }
-.admin-page :deep(.el-picker-panel) {
-  background: #1a1a1a;
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #e0e0e0;
-}
-.admin-page :deep(.el-date-table td) { color: #e0e0e0; }
-.admin-page :deep(.el-date-table td.next-month) { color: rgba(255,255,255,0.2); }
-.admin-page :deep(.el-date-table td.current:not(.disabled) .el-date-table-cell__text) {
-  background: #fff;
-  color: #000;
-}
-
-/* empty state */
-.admin-page :deep(.el-empty__description) { color: rgba(255,255,255,0.3); }
-
-/* skeleton */
-.admin-page :deep(.el-skeleton__item) { background: rgba(255,255,255,0.04); }
 </style>

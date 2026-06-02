@@ -18,6 +18,30 @@ export interface ReviewAiGenerateResponse {
   rawAlbumMeta?: Record<string, unknown>
 }
 
+export interface AnimeAiGenerateResponse {
+  title?: string
+  content?: string
+  score?: number
+  studio?: string
+  genres?: string[]
+  releaseDate?: string
+  coverImage?: string
+  backgroundImage?: string
+}
+
+export interface MovieAiGenerateResponse {
+  title?: string
+  content?: string
+  score?: number
+  director?: string
+  actors?: string
+  genres?: string[]
+  region?: string
+  releaseDate?: string
+  coverImage?: string
+  backgroundImage?: string
+}
+
 export interface ReviewItem {
   id: number
   albumId: number

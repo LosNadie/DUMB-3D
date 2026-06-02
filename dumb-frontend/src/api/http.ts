@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
 import type { ApiResult } from '../types/models'
+import { mockFallback } from '../mock'
 
 const API_SUCCESS_CODE = 0
 
@@ -26,6 +27,13 @@ http.interceptors.response.use(
     return payload as any
   },
   (error) => {
+    const config = error.config
+    if (config) {
+      const mockData = mockFallback(config.url || '', config.method || 'get')
+      if (mockData !== null) {
+        return Promise.resolve({ data: mockData })
+      }
+    }
     const message = error?.response?.data?.message || '请求失败'
     return Promise.reject(new Error(message))
   },

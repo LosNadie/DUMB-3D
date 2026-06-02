@@ -9,6 +9,18 @@ const SPLASH_FADE_MS = 1000
 const splashVisible = ref(false)
 const splashFading = ref(false)
 
+function handleInteraction() {
+  // 通知 BgmPlayer：用户已交互，可以开始播放
+  window.dispatchEvent(new CustomEvent('dumb:splash-click'))
+  // 如果用户主动点击，提前结束开屏
+  if (splashVisible.value && !splashFading.value) {
+    splashFading.value = true
+    setTimeout(() => {
+      splashVisible.value = false
+    }, SPLASH_FADE_MS)
+  }
+}
+
 onMounted(() => {
   if (!sessionStorage.getItem(SPLASH_SESSION_KEY)) {
     splashVisible.value = true
@@ -25,7 +37,7 @@ onMounted(() => {
 
 <template>
   <Teleport to="body">
-    <div v-if="splashVisible" class="splash-screen" :class="{ fading: splashFading }">
+    <div v-if="splashVisible" class="splash-screen" :class="{ fading: splashFading }" @click="handleInteraction">
       <div class="splash-content">
         <h1 class="splash-title">
           <span class="splash-letter" style="--l: 0">D</span>

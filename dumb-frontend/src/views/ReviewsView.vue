@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { reviewApi } from '../api'
 import type { ReviewItem } from '../types/models'
 import { consumeCubeNavigation } from '../composables/useCubeTransition'
 import MusicVideoBackground from '../components/common/MusicVideoBackground.vue'
 
 const router = useRouter()
+const route = useRoute()
 
 const GENRE_OPTIONS = [
   { label: '流行', value: 'POP' },
@@ -20,6 +21,7 @@ const GENRE_OPTIONS = [
 ]
 
 const BACKEND_ORIGIN = 'http://localhost:8080'
+const PAGE_SIZE = 6
 
 const reviews = ref<ReviewItem[]>([])
 const loading = ref(false)
@@ -30,6 +32,20 @@ const filters = reactive({
   keyword: '',
   genre: '',
 })
+
+const page = ref(Number(route.query.page) || 1)
+const sortField = ref<'date' | 'score'>('date')
+const sortOrder = ref<'desc' | 'asc'>('desc')
+
+function toggleSort(field: 'date' | 'score') {
+  if (sortField.value === field) {
+    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    sortField.value = field
+    sortOrder.value = 'desc'
+  }
+  page.value = 1
+}
 
 function resolveCoverUrl(url?: string) {
   if (!url) return 'https://dummyimage.com/400x400/111/eee&text=DUMB'
@@ -51,11 +67,7 @@ async function loadReviews(isInitial = false) {
     if (filters.keyword.trim()) params.keyword = filters.keyword.trim()
     if (filters.genre) params.genre = filters.genre
     const res = await reviewApi.list(Object.keys(params).length > 0 ? params : undefined)
-    reviews.value = [...res.data].sort((a, b) => {
-      const da = a.releaseDate ? new Date(a.releaseDate).getTime() : 0
-      const db = b.releaseDate ? new Date(b.releaseDate).getTime() : 0
-      return db - da
-    })
+    reviews.value = res.data
   } finally {
     loading.value = false
     if (isInitial) {
@@ -67,18 +79,66 @@ async function loadReviews(isInitial = false) {
 }
 
 function onSearch() {
+  page.value = 1
   void loadReviews()
 }
 
 function onReset() {
   filters.keyword = ''
   filters.genre = ''
+  page.value = 1
   void loadReviews()
 }
 
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(() => [filters.keyword, filters.genre], () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    page.value = 1
+    void loadReviews()
+  }, 300)
+}, { deep: true })
+
 function goToDetail(id: number) {
-  router.push(`/music/${id}`)
+  router.push({ path: `/music/${id}`, query: { ...route.query } })
 }
+
+const sortedList = computed(() => {
+  const result = [...reviews.value]
+  result.sort((a, b) => {
+    if (sortField.value === 'score') {
+      const sa = Number(a.score || 0)
+      const sb = Number(b.score || 0)
+      return sortOrder.value === 'asc' ? sa - sb : sb - sa
+    }
+    const da = a.releaseDate ? new Date(a.releaseDate).getTime() : 0
+    const db = b.releaseDate ? new Date(b.releaseDate).getTime() : 0
+    return sortOrder.value === 'asc' ? da - db : db - da
+  })
+  return result
+})
+
+const paginatedList = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return sortedList.value.slice(start, start + PAGE_SIZE)
+})
+
+const totalCount = computed(() => sortedList.value.length)
+
+watch(page, (newPage) => {
+  const query = { ...route.query }
+  if (newPage > 1) {
+    query.page = String(newPage)
+  } else {
+    delete query.page
+  }
+  router.replace({ query })
+})
+
+watch(() => route.query.page, (val) => {
+  const p = Number(val)
+  page.value = p > 0 ? p : 1
+})
 
 onMounted(() => {
   introFromCube.value = consumeCubeNavigation('/music')
@@ -92,29 +152,41 @@ onMounted(() => {
     <!-- ═══════ HEADER ═══════ -->
     <header class="wax-header">
       <button class="back-home" @click="router.push('/')">←</button>
-      <h1 class="wax-title">Music</h1>
+      <h1 class="wax-title">MUSIC</h1>
       <span></span>
     </header>
 
     <!-- ═══════ FILTER ═══════ -->
     <section class="wax-filter">
+      <div class="sort-bar">
+        <button
+          type="button"
+          class="sort-btn"
+          :class="{ active: sortField === 'date' }"
+          @click="toggleSort('date')"
+        >
+          {{ sortField === 'date' ? (sortOrder === 'desc' ? '⧖↓' : '⧖↑') : '⧖' }}
+        </button>
+        <button
+          type="button"
+          class="sort-btn"
+          :class="{ active: sortField === 'score' }"
+          @click="toggleSort('score')"
+        >
+          {{ sortField === 'score' ? (sortOrder === 'desc' ? '★↓' : '★↑') : '★' }}
+        </button>
+      </div>
       <div class="filter-group">
         <span class="filter-label">SEARCH:</span>
-        <el-input
-          v-model="filters.keyword"
-          placeholder=""
-          clearable
-          @keyup.enter="onSearch"
-        />
+        <el-input v-model="filters.keyword" placeholder="" clearable />
       </div>
       <div class="filter-group">
         <span class="filter-label">GENRE:</span>
-        <el-select v-model="filters.genre" clearable placeholder="ALL" @change="onSearch">
+        <el-select v-model="filters.genre" clearable placeholder="ALL">
           <el-option v-for="g in GENRE_OPTIONS" :key="g.value" :label="g.label" :value="g.value" />
         </el-select>
       </div>
       <div class="filter-actions">
-        <button class="wax-btn" @click="onSearch">EXECUTE</button>
         <button class="wax-btn secondary" @click="onReset">RESET</button>
       </div>
     </section>
@@ -122,7 +194,7 @@ onMounted(() => {
     <!-- ═══════ GRID ═══════ -->
     <div class="wax-grid" v-show="!loading">
       <div
-        v-for="(record, index) in reviews"
+        v-for="(record, index) in paginatedList"
         :key="record.id"
         class="wax-card"
         :class="{ entered: cardsEntered }"
@@ -149,6 +221,16 @@ onMounted(() => {
     </div>
 
     <el-empty v-if="!loading && reviews.length === 0" description="暂无专辑" />
+
+    <div v-if="totalCount > PAGE_SIZE" class="pagination-wrap">
+      <el-pagination
+        v-model:current-page="page"
+        :page-size="PAGE_SIZE"
+        :total="totalCount"
+        layout="prev, pager, next"
+        background
+      />
+    </div>
   </section>
 </template>
 
@@ -208,6 +290,7 @@ onMounted(() => {
 .wax-filter {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 20px;
   margin-bottom: 40px;
   flex-wrap: wrap;
@@ -322,7 +405,7 @@ onMounted(() => {
   overflow: hidden;
   cursor: pointer;
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(12px);
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
   border: 1px solid #151515;
 }
@@ -333,6 +416,10 @@ onMounted(() => {
 }
 
 @keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
   to {
     opacity: 1;
     transform: translateY(0);
@@ -452,6 +539,43 @@ onMounted(() => {
 
 .wax-card:hover .info-desc {
   color: #888;
+}
+
+.sort-bar {
+  display: flex;
+  gap: 8px;
+}
+.filter-actions {
+  margin-left: auto;
+}
+.sort-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.45);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  min-width: 42px;
+}
+.sort-btn:hover {
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.75);
+}
+.sort-btn.active {
+  background: transparent;
+  border-color: rgba(255,255,255,0.35);
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
 }
 
 /* ═══════════════════════════════════════════════

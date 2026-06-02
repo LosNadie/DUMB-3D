@@ -34,6 +34,10 @@ public class DeepSeekClient {
     }
 
     public AiDraftJson completeDraft(String systemPrompt, String userPrompt) {
+        return complete(systemPrompt, userPrompt, AiDraftJson.class);
+    }
+
+    public <T> T complete(String systemPrompt, String userPrompt, Class<T> clazz) {
         if (!StringUtils.hasText(aiProperties.getApiKey())) {
             throw new BizException(ResultCodeEnum.PARAM_ERROR, "未配置 AI API，请在环境变量 AI_API_KEY 或配置项 ai.api-key 中设置");
         }
@@ -65,9 +69,10 @@ public class DeepSeekClient {
                 throw new BizException(ResultCodeEnum.SERVER_ERROR, "AI 返回内容为空");
             }
             String cleaned = stripMarkdownFence(content);
-            AiDraftJson draft = objectMapper.readValue(cleaned, AiDraftJson.class);
-            if (draft.getDescription() != null && draft.getDescription().length() > MAX_DESCRIPTION_CHARS) {
-                draft.setDescription(draft.getDescription().substring(0, MAX_DESCRIPTION_CHARS));
+            T draft = objectMapper.readValue(cleaned, clazz);
+            if (draft instanceof AiDraftJson aiDraft && aiDraft.getDescription() != null
+                && aiDraft.getDescription().length() > MAX_DESCRIPTION_CHARS) {
+                aiDraft.setDescription(aiDraft.getDescription().substring(0, MAX_DESCRIPTION_CHARS));
             }
             return draft;
         } catch (BizException e) {

@@ -32,24 +32,19 @@ public class CommentServiceImpl implements CommentService {
             throw new BizException(ResultCodeEnum.UNAUTHORIZED, "用户不存在");
         }
 
-        boolean isReviewComment = ContentTypeEnum.REVIEW.getCode().equals(request.getContentType());
         boolean isTopLevelComment = request.getParentId() == null;
 
-        if (isReviewComment && isTopLevelComment) {
-            Comment existingReviewComment = commentMapper.selectOne(new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getContentType, ContentTypeEnum.REVIEW.getCode())
+        if (isTopLevelComment) {
+            Comment existingComment = commentMapper.selectOne(new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getContentType, request.getContentType())
                 .eq(Comment::getContentId, request.getContentId())
                 .eq(Comment::getUserId, user.getId())
                 .isNull(Comment::getParentId)
                 .last("LIMIT 1"));
-            if (existingReviewComment != null) {
-                existingReviewComment.setContent(request.getContent());
-                // 同一用户同一乐评只保留一条评论，评分更新为最新值，不新增计分记录
-                if (request.getScore() != null) {
-                    existingReviewComment.setScore(request.getScore());
-                }
-                commentMapper.updateById(existingReviewComment);
-                return existingReviewComment;
+            if (existingComment != null) {
+                existingComment.setContent(request.getContent());
+                commentMapper.updateById(existingComment);
+                return existingComment;
             }
         }
 
@@ -57,14 +52,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setContentType(request.getContentType());
         comment.setContentId(request.getContentId());
         comment.setContent(request.getContent());
-        if (isReviewComment && isTopLevelComment) {
-            if (request.getScore() == null) {
-                throw new BizException(ResultCodeEnum.PARAM_ERROR, "乐评评论必须包含评分");
-            }
-            comment.setScore(request.getScore());
-        } else {
-            comment.setScore(null);
-        }
+        comment.setScore(null);
         comment.setParentId(request.getParentId());
         comment.setUserId(user.getId());
         commentMapper.insert(comment);

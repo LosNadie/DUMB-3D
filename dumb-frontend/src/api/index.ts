@@ -1,5 +1,5 @@
 import http from './http'
-import type { ApiResult, AnimeItem, AuthResponse, CommentItem, MovieItem, ReviewAiGenerateResponse, ReviewItem } from '../types/models'
+import type { AnimeAiGenerateResponse, ApiResult, AnimeItem, AuthResponse, CommentItem, MovieAiGenerateResponse, MovieItem, ReviewAiGenerateResponse, ReviewItem } from '../types/models'
 
 export const authApi = {
   login(payload: { username: string; password: string }) {
@@ -61,6 +61,11 @@ export const animeApi = {
   remove(id: number) {
     return http.delete<any, ApiResult<any>>(`/admin/anime/${id}`)
   },
+  aiGenerate(payload: { title: string }) {
+    return http.post<any, ApiResult<AnimeAiGenerateResponse>>('/admin/anime/ai-generate', payload, {
+      timeout: 120000,
+    })
+  },
 }
 
 export const movieApi = {
@@ -84,6 +89,11 @@ export const movieApi = {
   },
   remove(id: number) {
     return http.delete<any, ApiResult<any>>(`/admin/movie/${id}`)
+  },
+  aiGenerate(payload: { title: string }) {
+    return http.post<any, ApiResult<MovieAiGenerateResponse>>('/admin/movie/ai-generate', payload, {
+      timeout: 120000,
+    })
   },
 }
 

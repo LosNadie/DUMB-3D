@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8181
 
 spring:
   application:
@@ -34,3 +34,10 @@ lastfm:
   api-key: ${LASTFM_API_KEY:}
   base-url: ${LASTFM_BASE_URL:https://ws.audioscrobbler.com/2.0/}
   autocorrect: ${LASTFM_AUTOCORRECT:true}
+
+# TMDB API，用于拉取电影海报、背景图与元数据。
+# 申请地址：https://www.themoviedb.org/settings/api
+tmdb:
+  api-key: ${TMDB_API_KEY:}
+  base-url: ${TMDB_BASE_URL:https://api.themoviedb.org/3}
+  image-base-url: ${TMDB_IMAGE_BASE_URL:https://image.tmdb.org/t/p/original}

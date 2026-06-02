@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { movieApi } from '../api'
 import type { MovieItem } from '../types/models'
 import { ElMessage } from 'element-plus'
+import CommentSection from '../components/common/CommentSection.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,7 +59,8 @@ watch(
 </script>
 
 <template>
-  <article v-if="detail && !loading" class="movie-detail">
+  <el-skeleton :loading="loading || !detail" animated :rows="6">
+    <article v-if="detail" class="movie-detail">
     <!-- 全屏背景 -->
     <div class="detail-bg">
       <div
@@ -69,7 +71,7 @@ watch(
     </div>
 
     <!-- 返回按钮 -->
-    <button class="back-btn" @click="router.push('/movie')">←</button>
+    <button class="back-btn" @click="router.push({ path: '/movie', query: route.query })">←</button>
 
     <!-- 主内容 -->
     <div class="detail-content">
@@ -92,8 +94,10 @@ watch(
         </div>
       </section>
       <section class="content" v-html="detail.content"></section>
+      <CommentSection contentType="MOVIE" :contentId="movieId" />
     </div>
   </article>
+</el-skeleton>
 </template>
 
 <style scoped>
@@ -124,18 +128,22 @@ watch(
 /* ═══ 返回按钮 ═══ */
 .back-btn {
   position: fixed;
-  top: 20px;
-  left: 24px;
+  top: 48px;
+  left: 40px;
   z-index: 10;
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.7);
+  color: #fff;
   font-size: 1.4rem;
   cursor: pointer;
-  transition: color 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
   line-height: 1;
 }
-.back-btn:hover { color: #fff; }
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 
 /* ═══ 主内容 ═══ */
 .detail-content {

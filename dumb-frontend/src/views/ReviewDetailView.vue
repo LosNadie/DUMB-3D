@@ -1,20 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { commentApi, reviewApi } from '../api'
-import type { CommentItem } from '../types/models'
-import { useAuthStore } from '../stores/auth'
+import { reviewApi } from '../api'
 import { ElMessage } from 'element-plus'
+import CommentSection from '../components/common/CommentSection.vue'
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
 const detail = ref<any>(null)
-const comments = ref<CommentItem[]>([])
 const loading = ref(false)
-const submitting = ref(false)
-const content = ref('')
-const rating = ref(8)
 const reviewId = computed(() => Number(route.params.id))
 const hasValidReviewId = computed(() => Number.isInteger(reviewId.value) && reviewId.value > 0)
 const BACKEND_ORIGIN = 'http://localhost:8080'
@@ -78,12 +72,6 @@ async function loadDetail() {
   detail.value = detailRes.data
 }
 
-async function loadComments() {
-  if (!hasValidReviewId.value) return
-  const commentRes = await commentApi.list('REVIEW', reviewId.value)
-  comments.value = commentRes.data
-}
-
 async function init() {
   if (!hasValidReviewId.value) {
     ElMessage.warning('无效的乐评 ID')
@@ -92,40 +80,11 @@ async function init() {
   }
   loading.value = true
   try {
-    await Promise.all([loadDetail(), loadComments()])
+    await loadDetail()
   } catch (e: any) {
     ElMessage.error(e?.message || '加载乐评详情失败')
   } finally {
     loading.value = false
-  }
-}
-
-async function submitComment() {
-  if (!content.value.trim()) {
-    ElMessage.warning('评论内容不能为空')
-    return
-  }
-  submitting.value = true
-  try {
-    await commentApi.create({ contentType: 'REVIEW', contentId: reviewId.value, content: content.value.trim(), score: rating.value })
-    ElMessage.success('评论发布成功')
-    content.value = ''
-    rating.value = 8
-    await loadComments()
-  } catch (e: any) {
-    ElMessage.error(e?.message || '发布评论失败')
-  } finally {
-    submitting.value = false
-  }
-}
-
-async function deleteComment(commentId: number) {
-  try {
-    await commentApi.remove(commentId)
-    ElMessage.success('评论删除成功')
-    await loadComments()
-  } catch (e: any) {
-    ElMessage.error(e?.message || '删除评论失败')
   }
 }
 
@@ -139,7 +98,7 @@ watch(() => route.params.id, () => {
 </script>
 
 <template>
-  <el-skeleton :loading="loading" animated :rows="6">
+  <el-skeleton :loading="loading || !detail" animated :rows="6">
     <div v-if="detail" class="music-detail">
       <!-- 全屏视频/图片背景 -->
       <div class="detail-bg">
@@ -157,7 +116,7 @@ watch(() => route.params.id, () => {
       </div>
 
       <!-- 返回按钮 -->
-      <button class="back-btn" @click="router.push('/music')">←</button>
+      <button class="back-btn" @click="router.push({ path: '/music', query: route.query })">←</button>
 
       <!-- 主内容 -->
       <div class="detail-content">
@@ -184,33 +143,7 @@ watch(() => route.params.id, () => {
             <article class="review-text" v-html="parsedContent.description" />
 
             <!-- 评论区 -->
-            <section class="comment-section">
-              <h3>评论</h3>
-              <el-empty v-if="comments.length === 0" description="还没有评论" />
-              <ul v-else class="comment-list">
-                <li v-for="item in comments" :key="item.id" class="comment-item">
-                  <div class="comment-head">
-                    <span>{{ item.username || `用户${item.userId}` }}</span>
-                    <div class="comment-actions">
-                      <span v-if="item.score !== undefined && item.score !== null" class="comment-score">评分 {{ item.score }}</span>
-                      <el-button v-if="authStore.isLoggedIn" type="danger" link size="small" @click="deleteComment(item.id)">删除</el-button>
-                    </div>
-                  </div>
-                  <p class="comment-content">{{ item.content }}</p>
-                </li>
-              </ul>
-
-              <template v-if="authStore.isLoggedIn">
-                <div class="rating-row">
-                  <span>评分</span>
-                  <el-rate v-model="rating" :max="10" :allow-half="true" />
-                  <span class="rating-value">{{ rating.toFixed(1) }}</span>
-                </div>
-                <el-input v-model="content" type="textarea" :rows="3" placeholder="写下你的观点..." />
-                <el-button type="primary" :loading="submitting" @click="submitComment">发布</el-button>
-              </template>
-              <el-alert v-else title="登录后可评论" type="info" :closable="false" />
-            </section>
+            <CommentSection contentType="REVIEW" :contentId="reviewId" />
           </div>
 
           <!-- 侧边曲目列表 -->
@@ -266,20 +199,22 @@ watch(() => route.params.id, () => {
 /* ====== 返回按钮 ====== */
 .back-btn {
   position: fixed;
-  top: 20px;
-  left: 24px;
+  top: 48px;
+  left: 40px;
   z-index: 10;
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.7);
+  color: #fff;
   font-family: 'Inter', sans-serif;
   font-size: 1.4rem;
   cursor: pointer;
-  transition: color 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
   line-height: 1;
 }
 .back-btn:hover {
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ====== 主内容 ====== */
@@ -380,65 +315,6 @@ watch(() => route.params.id, () => {
   margin: 1.5em 0 0.5em;
 }
 
-/* 评论区 */
-.comment-section {
-  padding-top: 24px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
-.comment-section h3 {
-  margin: 0 0 20px;
-  font-family: 'Playfair Display', serif;
-  font-size: 1.3rem;
-  font-weight: 600;
-}
-
-.comment-list {
-  display: grid;
-  gap: 12px;
-  margin: 0 0 24px;
-  padding: 0;
-  list-style: none;
-}
-.comment-item {
-  padding: 14px 16px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 8px;
-}
-.comment-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.5);
-}
-.comment-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.comment-score {
-  color: #ffffff;
-}
-.comment-content {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: rgba(255,255,255,0.8);
-}
-
-.rating-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.rating-value {
-  color: rgba(255,255,255,0.5);
-  font-size: 0.85rem;
-}
-
 /* 侧边栏 */
 .body-sidebar {
   display: flex;
@@ -471,23 +347,6 @@ watch(() => route.params.id, () => {
   font-size: 0.82rem;
   color: rgba(255,255,255,0.65);
   line-height: 1.5;
-}
-
-.meta-list {
-  display: grid;
-  gap: 10px;
-}
-.meta-list p {
-  display: flex;
-  justify-content: space-between;
-  margin: 0;
-  font-size: 0.82rem;
-}
-.meta-list p span:first-child {
-  color: rgba(255,255,255,0.4);
-}
-.meta-list p span:last-child {
-  color: rgba(255,255,255,0.8);
 }
 
 /* 响应式 */

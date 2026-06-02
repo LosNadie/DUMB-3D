@@ -18,6 +18,7 @@ const PLAYLIST = [
 ]
 
 let playedIndices: number[] = []
+let interactionHandler: (() => void) | null = null
 
 function shuffleNext(): number {
   if (playedIndices.length === 0 || playedIndices.length >= PLAYLIST.length) {
@@ -46,6 +47,21 @@ function toggleMute() {
   audio.muted = muted.value
 }
 
+function tryPlayOnInteraction() {
+  const audio = audioRef.value
+  if (!audio) return
+  if (audio.paused) {
+    playRandom()
+  }
+  // 只触发一次
+  if (interactionHandler) {
+    document.removeEventListener('click', interactionHandler)
+    document.removeEventListener('keydown', interactionHandler)
+    window.removeEventListener('dumb:splash-click', interactionHandler)
+    interactionHandler = null
+  }
+}
+
 onMounted(() => {
   const audio = audioRef.value
   if (!audio) return
@@ -58,22 +74,22 @@ onMounted(() => {
   // when track ends, play next randomly
   audio.addEventListener('ended', playRandom)
 
-  // if autoplay blocked, start on first interaction
-  if (audio.paused) {
-    const startPlay = () => {
-      if (audio.paused) playRandom()
-      document.removeEventListener('click', startPlay)
-      document.removeEventListener('keydown', startPlay)
-    }
-    document.addEventListener('click', startPlay, { once: false })
-    document.addEventListener('keydown', startPlay, { once: false })
-  }
+  // if autoplay blocked, start on first interaction (click, key, or splash-screen tap)
+  interactionHandler = tryPlayOnInteraction
+  document.addEventListener('click', interactionHandler)
+  document.addEventListener('keydown', interactionHandler)
+  window.addEventListener('dumb:splash-click', interactionHandler)
 })
 
 onUnmounted(() => {
   if (audioRef.value) {
     audioRef.value.pause()
     audioRef.value.removeEventListener('ended', playRandom)
+  }
+  if (interactionHandler) {
+    document.removeEventListener('click', interactionHandler)
+    document.removeEventListener('keydown', interactionHandler)
+    window.removeEventListener('dumb:splash-click', interactionHandler)
   }
 })
 </script>

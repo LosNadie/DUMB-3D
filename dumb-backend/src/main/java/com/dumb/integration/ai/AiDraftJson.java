@@ -20,4 +20,6 @@ public class AiDraftJson {
     private String leadTrack;
 
     private String description;
+
+    private String coverImage;
 }

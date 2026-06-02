@@ -2,8 +2,11 @@ package com.dumb.controller.admin;
 
 import com.dumb.common.result.ApiResult;
 import com.dumb.controller.BaseController;
+import com.dumb.dto.request.MovieAiGenerateRequest;
 import com.dumb.dto.request.MovieCreateRequest;
+import com.dumb.dto.response.MovieAiGenerateResponse;
 import com.dumb.entity.Movie;
+import com.dumb.service.MovieAiGenerationService;
 import com.dumb.service.MovieService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +17,11 @@ import java.util.List;
 @RequestMapping("/api/admin/movie")
 public class AdminMovieController extends BaseController {
     private final MovieService movieService;
+    private final MovieAiGenerationService movieAiGenerationService;
 
-    public AdminMovieController(MovieService movieService) {
+    public AdminMovieController(MovieService movieService, MovieAiGenerationService movieAiGenerationService) {
         this.movieService = movieService;
+        this.movieAiGenerationService = movieAiGenerationService;
     }
 
     @PostMapping
@@ -43,5 +48,10 @@ public class AdminMovieController extends BaseController {
     public ApiResult<Void> delete(@PathVariable Long id) {
         movieService.deleteById(id);
         return ApiResult.success(null);
+    }
+
+    @PostMapping("/ai-generate")
+    public ApiResult<MovieAiGenerateResponse> aiGenerate(@Valid @RequestBody MovieAiGenerateRequest request) {
+        return ApiResult.success(movieAiGenerationService.generate(request));
     }
 }

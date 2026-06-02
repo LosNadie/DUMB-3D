@@ -210,7 +210,7 @@ onMounted(async () => {
 
 .floating-card {
   opacity: 0;
-  transform: translateY(60px);
+  transform: translateY(24px);
 }
 
 .floating-card.entered {
@@ -225,7 +225,7 @@ onMounted(async () => {
 @keyframes cardRiseUp {
   from {
     opacity: 0;
-    transform: translateY(72px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;

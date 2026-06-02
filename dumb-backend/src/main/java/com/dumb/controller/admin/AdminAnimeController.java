@@ -2,8 +2,11 @@ package com.dumb.controller.admin;
 
 import com.dumb.common.result.ApiResult;
 import com.dumb.controller.BaseController;
+import com.dumb.dto.request.AnimeAiGenerateRequest;
 import com.dumb.dto.request.AnimeCreateRequest;
+import com.dumb.dto.response.AnimeAiGenerateResponse;
 import com.dumb.entity.Anime;
+import com.dumb.service.AnimeAiGenerationService;
 import com.dumb.service.AnimeService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +17,11 @@ import java.util.List;
 @RequestMapping("/api/admin/anime")
 public class AdminAnimeController extends BaseController {
     private final AnimeService animeService;
+    private final AnimeAiGenerationService animeAiGenerationService;
 
-    public AdminAnimeController(AnimeService animeService) {
+    public AdminAnimeController(AnimeService animeService, AnimeAiGenerationService animeAiGenerationService) {
         this.animeService = animeService;
+        this.animeAiGenerationService = animeAiGenerationService;
     }
 
     @PostMapping
@@ -43,5 +48,10 @@ public class AdminAnimeController extends BaseController {
     public ApiResult<Void> delete(@PathVariable Long id) {
         animeService.deleteById(id);
         return ApiResult.success(null);
+    }
+
+    @PostMapping("/ai-generate")
+    public ApiResult<AnimeAiGenerateResponse> aiGenerate(@Valid @RequestBody AnimeAiGenerateRequest request) {
+        return ApiResult.success(animeAiGenerationService.generate(request));
     }
 }

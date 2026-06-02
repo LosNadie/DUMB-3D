@@ -66,7 +66,8 @@ watch(
 </script>
 
 <template>
-  <article v-if="detail && !loading" class="movie-detail">
+  <el-skeleton :loading="loading || !detail" animated :rows="6">
+    <article v-if="detail" class="movie-detail">
     <FlowSceneBackdrop />
     <section class="banner" :style="heroBackgroundStyle(detail.backgroundImage || detail.coverImage)"></section>
 
@@ -86,6 +87,7 @@ watch(
     </section>
     <section class="content" v-html="detail.content"></section>
   </article>
+</el-skeleton>
 </template>
 
 <style scoped>
